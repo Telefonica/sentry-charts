@@ -1,0 +1,143 @@
+{{- if .Values.hooks.enabled -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ template "sentry.fullname" . }}-novum-bootstrap
+  labels:
+    app: sentry
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    "helm.sh/hook": "post-install,post-upgrade"
+    "helm.sh/hook-delete-policy": "before-hook-creation"
+    "helm.sh/hook-weight": "1000"
+spec:
+  {{- if .Values.hooks.activeDeadlineSeconds }}
+  activeDeadlineSeconds: {{ .Values.hooks.activeDeadlineSeconds }}
+  {{- end}}
+  template:
+    metadata:
+      name: {{ template "sentry.fullname" . }}-novum-bootstrap
+      annotations:
+        checksum/configmap.yaml: {{ include (print $.Template.BasePath "/configmap-sentry.yaml") . | sha256sum }}
+        {{- if .Values.sentry.worker.annotations }}
+{{ toYaml .Values.sentry.worker.annotations | indent 8 }}
+        {{- end }}
+        {{- if .Values.hooks.novumBootstrap.podAnnotations }}
+{{ toYaml .Values.hooks.novumBootstrap.podAnnotations | indent 8 }}
+        {{- end }}
+      labels:
+        app: sentry
+        release: "{{ .Release.Name }}"
+        {{- if .Values.sentry.worker.podLabels }}
+{{ toYaml .Values.sentry.worker.podLabels | indent 8 }}
+        {{- end }}
+        {{- if .Values.hooks.novumBootstrap.podLabels }}
+{{ toYaml .Values.hooks.novumBootstrap.podLabels | indent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.hooks.novumBootstrap.affinity }}
+      affinity:
+{{ toYaml .Values.hooks.novumBootstrap.affinity | indent 8 }}
+      {{- end }}
+      {{- if .Values.hooks.novumBootstrap.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.hooks.novumBootstrap.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.hooks.novumBootstrap.tolerations }}
+      tolerations:
+{{ toYaml .Values.hooks.novumBootstrap.tolerations | indent 8 }}
+      {{- end }}
+      restartPolicy: Never
+      {{- if .Values.images.sentry.imagePullSecrets }}
+      imagePullSecrets:
+{{ toYaml .Values.images.sentry.imagePullSecrets | indent 8 }}
+      {{- end }}
+      {{- if .Values.dnsPolicy }}
+      dnsPolicy: {{ .Values.dnsPolicy | quote }}
+      {{- end }}
+      {{- if .Values.dnsConfig }}
+      dnsConfig:
+{{ toYaml .Values.dnsConfig | indent 8 }}
+      {{- end }}
+      {{- if .Values.hooks.securityContext }}
+      securityContext:
+{{ toYaml .Values.hooks.securityContext | indent 8 }}
+      {{- end }}
+      containers:
+      - name: novum-bootstrap-job
+        image: "{{ template "sentry.image" . }}"
+        imagePullPolicy: {{ default "IfNotPresent" .Values.images.sentry.pullPolicy }}
+        command:
+        - "sentry"
+        - "exec"
+        - "/usr/src/sentry/novum_bootstrap.py"
+        - "--verbose"
+        {{- if .Values.novum.bootstrap }}
+        - "--projects"
+        - {{ .Values.novum.bootstrap.projects | default list | toJson | quote }}
+        - "--keys"
+        - {{ .Values.novum.bootstrap.keys | default list | toJson | quote }}
+        - "--ids"
+        - {{ .Values.novum.bootstrap.ids | default list | toJson | quote }}
+        {{- end }}
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        {{- if .Values.sentry.existingSecret }}
+        - name: SENTRY_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.sentry.existingSecret }}
+              key: {{ default "key" .Values.sentry.existingSecretKey }}
+        {{- else }}
+        - name: SENTRY_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "sentry.fullname" . }}-sentry-secret
+              key: "key"
+        {{- end }}
+        {{- if .Values.postgresql.enabled }}
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ default (include "sentry.postgresql.fullname" .) .Values.postgresql.existingSecret }}
+              key: {{ default "postgresql-password" .Values.postgresql.existingSecretKey }}
+        {{- else if .Values.externalPostgresql.password }}
+        - name: POSTGRES_PASSWORD
+          value: {{ .Values.externalPostgresql.password | quote }}
+        {{- else if .Values.externalPostgresql.existingSecret }}
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.externalPostgresql.existingSecret }}
+              key: {{ default "postgresql-password" .Values.externalPostgresql.existingSecretKey }}
+        {{- end }}
+        {{- if .Values.hooks.novumBootstrap.env }}
+{{ toYaml .Values.hooks.novumBootstrap.env | indent 8 }}
+        {{- end }}
+        volumeMounts:
+        - mountPath: /etc/sentry
+          name: config
+          readOnly: true
+{{- if .Values.hooks.novumBootstrap.resources }}
+        resources:
+{{ toYaml .Values.hooks.novumBootstrap.resources | indent 10 }}
+{{- end }}
+{{- if .Values.hooks.novumBootstrap.sidecars }}
+{{ toYaml .Values.hooks.novumBootstrap.sidecars | indent 6 }}
+{{- end }}
+      volumes:
+      - name: config
+        configMap:
+          name: {{ template "sentry.fullname" . }}-sentry
+{{- if .Values.hooks.novumBootstrap.volumes }}
+{{ toYaml .Values.hooks.novumBootstrap.volumes | indent 6 }}
+{{- end }}
+      {{- if .Values.hooks.shareProcessNamespace }}
+      shareProcessNamespace: {{ .Values.hooks.shareProcessNamespace }}
+      {{- end }}
+{{- end -}}

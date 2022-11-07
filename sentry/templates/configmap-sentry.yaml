@@ -473,3 +473,5 @@ data:
 {{- end }}
 
 {{ .Values.config.sentryConfPy | indent 4 }}
+
+{{ .Values.config.sentryExtraConfPy | default "" | indent 4 }}

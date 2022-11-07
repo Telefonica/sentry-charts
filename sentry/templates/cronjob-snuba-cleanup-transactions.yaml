@@ -82,8 +82,7 @@ spec:
 {{ toYaml .Values.snuba.cleanupTransactions.env | indent 14 }}
 {{- end }}
             envFrom:
-                - secretRef:
-                      name: {{ template "sentry.fullname" . }}-snuba-env
+{{- include "novum.sentry.snuba.envFrom" . | indent 12 }}
             volumeMounts:
               - mountPath: /etc/snuba
                 name: config

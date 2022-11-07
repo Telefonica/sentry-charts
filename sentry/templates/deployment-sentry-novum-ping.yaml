@@ -1,0 +1,129 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "sentry.fullname" . }}-novum-ping
+  labels:
+    app: {{ template "sentry.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+        app: {{ template "sentry.fullname" . }}
+        release: "{{ .Release.Name }}"
+        role: ping
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        checksum/configYml: {{ .Values.config.configYml | toYaml | toString | sha256sum }}
+        checksum/sentryConfPy: {{ .Values.config.sentryConfPy | sha256sum }}
+        checksum/config.yaml: {{ include (print $.Template.BasePath "/configmap-sentry.yaml") . | sha256sum }}
+        {{- if .Values.sentry.novumPing.annotations }}
+{{ toYaml .Values.sentry.novumPing.annotations | indent 8 }}
+        {{- end }}
+      labels:
+        app: {{ template "sentry.fullname" . }}
+        release: "{{ .Release.Name }}"
+        role: ping
+        {{- if .Values.sentry.novumPing.podLabels }}
+{{ toYaml .Values.sentry.novumPing.podLabels | indent 8 }}
+        {{- end }}
+    spec:
+      affinity:
+      {{- if .Values.sentry.novumPing.affinity }}
+{{ toYaml .Values.sentry.novumPing.affinity | indent 8 }}
+      {{- end }}
+      {{- if .Values.sentry.novumPing.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.sentry.novumPing.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.sentry.novumPing.tolerations }}
+      tolerations:
+{{ toYaml .Values.sentry.novumPing.tolerations | indent 8 }}
+      {{- end }}
+      {{- if .Values.images.sentry.imagePullSecrets }}
+      imagePullSecrets:
+{{ toYaml .Values.images.sentry.imagePullSecrets | indent 8 }}
+      {{- end }}
+      {{- if .Values.dnsPolicy }}
+      dnsPolicy: {{ .Values.dnsPolicy | quote }}
+      {{- end }}
+      {{- if .Values.dnsConfig }}
+      dnsConfig:
+{{ toYaml .Values.dnsConfig | indent 8 }}
+      {{- end }}
+      {{- if .Values.sentry.novumPing.securityContext }}
+      securityContext:
+{{ toYaml .Values.sentry.novumPing.securityContext | indent 8 }}
+      {{- end }}
+      containers:
+      - name: {{ .Chart.Name }}-novum-ping
+        image: "{{ template "sentry.image" . }}"
+        imagePullPolicy: {{ default "IfNotPresent" .Values.images.sentry.pullPolicy }}
+        command: ["/usr/src/sentry/send_ping.py"]
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: C_FORCE_ROOT
+          value: "true"
+{{ include "sentry.env" . | indent 8 }}
+{{- if .Values.sentry.novumPing.env }}
+{{ toYaml .Values.sentry.novumPing.env | indent 8 }}
+{{- end }}
+        volumeMounts:
+        - mountPath: /etc/sentry
+          name: config
+          readOnly: true
+        - mountPath: {{ .Values.filestore.filesystem.path }}
+          name: sentry-data
+        {{- if .Values.geodata.volumeName }}
+        - name: {{ .Values.geodata.volumeName }}
+          mountPath: {{ .Values.geodata.mountPath }}
+        {{- end }}
+        {{- if and (eq .Values.filestore.backend "gcs") .Values.filestore.gcs.secretName }}
+        - name: sentry-google-cloud-key
+          mountPath: /var/run/secrets/google
+        {{ end }}
+{{- if .Values.sentry.novumPing.volumeMounts }}
+{{ toYaml .Values.sentry.novumPing.volumeMounts | indent 8 }}
+{{- end }}
+{{- if .Values.sentry.novumPing.resource }}
+        resources:
+{{ toYaml .Values.sentry.novumPing.resources | indent 12 }}
+{{- end }}
+{{- if .Values.sentry.novumPing.sidecars }}
+{{ toYaml .Values.sentry.novumPing.sidecars | indent 6 }}
+{{- end }}
+      {{- if .Values.serviceAccount.enabled }}
+      serviceAccountName: {{ .Values.serviceAccount.name }}-novum-ping
+      {{- end }}
+      volumes:
+      - name: config
+        configMap:
+          name: {{ template "sentry.fullname" . }}-sentry
+      - name: sentry-data
+      {{- if and (eq .Values.filestore.backend "filesystem") .Values.filestore.filesystem.persistence.enabled (.Values.filestore.filesystem.persistence.persistentWorkers) }}
+      {{- if .Values.filestore.filesystem.persistence.existingClaim }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.filestore.filesystem.persistence.existingClaim }}
+      {{- else }}
+        persistentVolumeClaim:
+          claimName: {{ template "sentry.fullname" . }}-data
+      {{- end }}
+      {{- else }}
+        emptyDir: {}
+      {{ end }}
+      {{- if and (eq .Values.filestore.backend "gcs") .Values.filestore.gcs.secretName }}
+      - name: sentry-google-cloud-key
+        secret:
+          secretName: {{ .Values.filestore.gcs.secretName }}
+      {{ end }}
+      {{- if .Values.sentry.novumPing.priorityClassName }}
+      priorityClassName: "{{ .Values.sentry.novumPing.priorityClassName }}"
+      {{- end }}
+{{- if .Values.sentry.novumPing.volumes }}
+{{ toYaml .Values.sentry.novumPing.volumes | indent 6 }}
+{{- end }}

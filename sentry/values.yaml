@@ -21,6 +21,7 @@ images:
   sentry:
     # repository: getsentry/sentry
     # tag: Chart.AppVersion
+    tag: "22.10.0-novum2"
     # pullPolicy: IfNotPresent
     imagePullSecrets: []
   snuba:

@@ -1,0 +1,31 @@
+{{ template "chart.header" . }}
+
+{{ template "chart.versionBadge" . }}{{ template "chart.typeBadge" . }}{{ template "chart.appVersionBadge" . }}
+
+## Motivation
+
+This chart is copied from https://github.com/Telefonica/sentry-charts. That repository is a fork of
+https://github.com/sentry-kubernetes/charts that tracks upstream and changes specific for Novum deployments.
+
+We're using Helm charts instead of Kraken due to the complexity of the charts, its dependencies and its installation 
+hooks.
+
+If you have to make any modification to this chart make it always at
+[sentry-charts](https://github.com/Telefonica/sentry-charts) and later copy it to
+[k8s-charts](https://github.com/Telefonica/k8s-charts).
+
+For more information check [COMING SOON] 
+
+## Introduction
+
+{{ template "chart.description" . }}
+
+{{ template "chart.requirementsSection" . }}
+
+{{ template "chart.valuesSection" . }}
+
+{{ template "chart.sourcesSection" . }}
+
+{{ template "chart.maintainersSection" . }}
+
+{{ template "helm-docs.versionFooter" . }}

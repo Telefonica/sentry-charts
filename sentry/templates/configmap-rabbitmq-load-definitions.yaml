@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "sentry.fullname" . }}-rabbitmq-load-definitions
+  labels:
+    app: sentry
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+data:
+  load_definition.json: |
+    {
+      "users": [
+        {
+          "name": "{{ .Values.rabbitmq.auth.username }}",
+          "password": "{{ .Values.rabbitmq.auth.password }}",
+          "tags": "administrator"
+        }
+      ],
+      "permissions": [{
+        "user": "{{ .Values.rabbitmq.auth.username }}",
+        "vhost": "/",
+        "configure": ".*",
+        "write": ".*",
+        "read": ".*"
+      }],
+      "policies": [
+        {
+          "name": "ha-all",
+          "pattern": ".*",
+          "vhost": "/",
+          "definition": {
+            "ha-mode": "all",
+            "ha-sync-mode": "automatic",
+            "ha-sync-batch-size": 1
+          }
+        }
+      ],
+      "vhosts": [
+        {
+          "name": "/"
+        }
+      ]
+    }

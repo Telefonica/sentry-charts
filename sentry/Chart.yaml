@@ -2,7 +2,8 @@ apiVersion: v2
 name: sentry
 description: A Helm chart for Kubernetes
 type: application
-version: 17.8.0
+# IMPORTANT: Remember to update images.sentry.tag in values.yaml to match appVersion
+version: 17.8.0-novum2
 appVersion: 22.10.0
 dependencies:
   - name: memcached
@@ -39,4 +40,5 @@ dependencies:
     version: 12.0.4
     condition: nginx.enabled
 maintainers:
-  - name: sentry-kubernetes
+  - name: novum-server-core
+    email: novum-server-core@telefonica.com
