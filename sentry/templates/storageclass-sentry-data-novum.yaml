@@ -1,8 +1,8 @@
-{{- if and .Values.filestore.filesystem.persistence.enabled (eq .Values.filestore.filesystem.persistence.storageClass "azurefile-common-sentry-data") }}
+{{- if and .Values.filestore.filesystem.persistence.enabled (hasPrefix "azurefile-" .Values.filestore.filesystem.persistence.storageClass) }}
 kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
-  name: azurefile-common-sentry-data
+  name: {{ .Values.filestore.filesystem.persistence.storageClass }}
   labels:
     app: {{ template "sentry.fullname" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
@@ -12,7 +12,7 @@ parameters:
   skuName: {{ default "Standard_LRS" .Values.filestore.filesystem.persistence.skuName }}
   storageAccount: {{ required "value for .Values.filestore.filesystem.persistence.storageAccount is required for persistent filestore" .Values.filestore.filesystem.persistence.storageAccount }}
   resourceGroup: {{ required "value for .Values.filestore.filesystem.persistence.resourceGroup is required for persistent filestore" .Values.filestore.filesystem.persistence.resourceGroup }}
-  sharename: "azurefile-common-sentry-data"
+  sharename: "{{ .Values.filestore.filesystem.persistence.storageClass }}"
 provisioner: file.csi.azure.com
 reclaimPolicy: Retain
 volumeBindingMode: Immediate

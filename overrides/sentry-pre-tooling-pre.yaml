@@ -1,0 +1,46 @@
+# Specific overrides for sentry-pre in tooling-pre namespace
+
+hooks:
+  novumBootstrap:
+    env:
+    - name: SENTRY_METRICS_PREFIX
+      value: sentry-pre
+
+nginx:
+  fullnameOverride: sentry-pre
+  existingServerBlockConfigmap: sentry-pre-nginx
+
+memcached:
+  extraEnvVarsCM: "sentry-pre-memcached"
+
+config:
+  sentryExtraConfPy: |
+    ########
+    # DSN  #
+    ########
+
+    # This is used to generate the DSN. When an internal error is triggered it will also use this endpoint
+    # Make sure to match the service name
+    SENTRY_ENDPOINT = "http://sentry-pre.tooling-pre"
+    
+    ##################
+    # StatsD Metrics #
+    ##################
+
+    SENTRY_METRICS_PREFIX = "platform.metrics.tooling-prd.tooling-pre.sentry_pre_internal."
+    
+    SENTRY_METRICS_BACKEND = "sentry.metrics.statsd.StatsdMetricsBackend"
+    SENTRY_METRICS_OPTIONS = {
+        "host": "statsite-proxy.common",
+        "port": 8125,
+    }
+
+system:
+  url: https://sentry-pre.prd-tooling-northeurope09.tuenti.io
+
+filestore:
+  filesystem:
+    persistence:
+      storageAccount: "prdtoolingnortheurope09"
+      resourceGroup: "prd-tooling-northeurope09-resource-group"
+      storageClass: "azurefile-tooling-pre-sentry-pre-data"

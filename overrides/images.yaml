@@ -1,0 +1,66 @@
+# Replace the registry for the container images to the tooling registry
+# If you need to make any change to this file remember to mimic the change in
+# the Docker images section in https://github.com/Telefonica/tf-module-kubenovum/blob/master/k8s-setup/chart-sentry.tf
+
+clickhouse:
+  clickhouse:
+    metrics:
+      image:
+        registry: dockerprx.prd.tooling.northeurope09.novumproject.com
+    image: dockerprx.prd.tooling.northeurope09.novumproject.com/yandex/clickhouse-server
+    init:
+      image: dockerprx.prd.tooling.northeurope09.novumproject.com/busybox
+
+nginx:
+  image:
+    registry: dockerprx.prd.tooling.northeurope09.novumproject.com
+kafka:
+  metrics:
+    kafka:
+      image:
+        registry: dockerprx.prd.tooling.northeurope09.novumproject.com
+  image:
+    registry: dockerprx.prd.tooling.northeurope09.novumproject.com
+  zookeeper:
+    image:
+      registry: dockerprx.prd.tooling.northeurope09.novumproject.com
+postgresql:
+  metrics:
+    image:
+      registry: dockerprx.prd.tooling.northeurope09.novumproject.com
+  image:
+    registry: dockerprx.prd.tooling.northeurope09.novumproject.com
+
+redis:
+  metrics:
+    image:
+      registry: dockerprx.prd.tooling.northeurope09.novumproject.com
+  image:
+    registry: dockerprx.prd.tooling.northeurope09.novumproject.com
+
+zookeeper:
+  image:
+    registry: dockerprx.prd.tooling.northeurope09.novumproject.com
+
+memcached:
+  metrics:
+    image:
+      registry: dockerprx.prd.tooling.northeurope09.novumproject.com
+  image:
+    registry: dockerprx.prd.tooling.northeurope09.novumproject.com
+
+images:
+  sentry:
+    repository: dockerprx.prd.tooling.northeurope09.novumproject.com/getsentry/sentry
+
+  snuba:
+    repository: dockerprx.prd.tooling.northeurope09.novumproject.com/getsentry/snuba
+  relay:
+    repository: dockerprx.prd.tooling.northeurope09.novumproject.com/getsentry/relay
+  symbolicator:
+    repository: dockerprx.prd.tooling.northeurope09.novumproject.com/getsentry/symbolicator
+
+hooks:
+  dbCheck:
+    image:
+      repository: dockerprx.prd.tooling.northeurope09.novumproject.com/subfuzion/netcat
