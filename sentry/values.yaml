@@ -335,6 +335,7 @@ sentry:
     failedJobsHistoryLimit: 5
     activeDeadlineSeconds: 100
     concurrencyPolicy: Allow
+    concurrency: 1
     enabled: true
     schedule: "0 0 * * *"
     days: 90
@@ -732,6 +733,7 @@ slack: {}
 #   clientId:
 #   clientSecret:
 #   signingSecret:
+#   existingSecret:
 #   Reference -> https://develop.sentry.dev/integrations/slack/
 
 nginx:

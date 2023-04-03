@@ -496,4 +496,21 @@ Common Sentry environment variables
       key: {{ default "mail-password" .Values.mail.existingSecretKey }}
 {{- end }}
 {{ include "novum.sentry.env" . }}
+{{- if .Values.slack.existingSecret }}
+- name: SLACK_CLIENT_ID
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.slack.existingSecret }}
+      key: "client-id"
+- name: SLACK_CLIENT_SECRET
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.slack.existingSecret }}
+      key: "client-secret"
+- name: SLACK_SIGNING_SECRET
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.slack.existingSecret }}
+      key: "signing-secret"
+{{- end }}
 {{- end -}}
