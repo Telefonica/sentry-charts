@@ -443,6 +443,7 @@ Common Snuba environment variables
       name: {{ .Values.externalClickhouse.existingSecret }}
       key: {{ default "clickhouse-password" .Values.externalClickhouse.existingSecretKey }}
 {{- end }}
+{{ include "novum.snuba.env" . }}
 {{- end -}}
 
 {{/*
@@ -494,4 +495,5 @@ Common Sentry environment variables
       name: {{ .Values.mail.existingSecret }}
       key: {{ default "mail-password" .Values.mail.existingSecretKey }}
 {{- end }}
+{{ include "novum.sentry.env" . }}
 {{- end -}}

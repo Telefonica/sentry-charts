@@ -31,7 +31,7 @@ config:
     
     SENTRY_METRICS_BACKEND = "sentry.metrics.statsd.StatsdMetricsBackend"
     SENTRY_METRICS_OPTIONS = {
-        "host": "statsite-proxy.common",
+        "host": os.getenv("SENTRY_STATSITE_PROXY", "statsite-proxy.common"),
         "port": 8125,
     }
 
@@ -44,3 +44,10 @@ filestore:
       storageAccount: "prdtoolingnortheurope09"
       resourceGroup: "prd-tooling-northeurope09-resource-group"
       storageClass: "azurefile-tooling-pre-sentry-pre-data"
+
+novum:
+  statsiteProxy:
+    # No dummy statsite-proxy service is created and we'll use the statsite-proxy.common one
+    # We don't need this in sentry-pre because statsite-proxy.common will be always available before
+    # installing sentry-pre
+    enabled: false

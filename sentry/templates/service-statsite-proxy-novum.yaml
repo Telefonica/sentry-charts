@@ -1,0 +1,26 @@
+{{- if (default true .Values.novum.statsiteProxy.enabled) }}
+# This is created to have a service that can be resolved even when there is no real statsite-proxy still
+# listening. This avoids problems deploying in new clusters where statsite-proxy is not available because
+# Kraken hasn't installed anything yet
+apiVersion: v1
+kind: Service
+metadata:
+ name: {{ template "sentry.fullname" . }}-statsite-proxy-novum
+  {{- if .Values.metrics.service.annotations }}
+ annotations: {{ toYaml .Values.metrics.service.annotations | nindent 4 }}
+  {{- end }}
+ labels:
+    app: {{ template "sentry.fullname" . }}-statsite-proxy-novum
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8125
+    targetPort: 8125
+    protocol: UDP
+    name: statsite-proxy-udp
+  selector:
+    app: statsite-proxy
+{{- end }}
