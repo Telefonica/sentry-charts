@@ -36,7 +36,7 @@ Add additional Novum environment variables
   value: "6379"
 {{- if .Values.novum.statsiteProxy.enabled }}
 - name: SENTRY_STATSITE_PROXY
-  value: "{{ include "sentry.fullname" .}}-statsite-proxy-novum.common"
+  value: "{{ include "sentry.fullname" .}}-statsite-proxy-novum"
 {{- end }}
 {{- end -}}
 

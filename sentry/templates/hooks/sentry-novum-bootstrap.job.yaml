@@ -87,39 +87,13 @@ spec:
         env:
         - name: PYTHONUNBUFFERED
           value: "1"
-        {{- if .Values.sentry.existingSecret }}
-        - name: SENTRY_SECRET_KEY
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.sentry.existingSecret }}
-              key: {{ default "key" .Values.sentry.existingSecretKey }}
-        {{- else }}
-        - name: SENTRY_SECRET_KEY
-          valueFrom:
-            secretKeyRef:
-              name: {{ template "sentry.fullname" . }}-sentry-secret
-              key: "key"
-        {{- end }}
-        {{- if .Values.postgresql.enabled }}
-        - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: {{ default (include "sentry.postgresql.fullname" .) .Values.postgresql.existingSecret }}
-              key: {{ default "postgresql-password" .Values.postgresql.existingSecretKey }}
-        {{- else if .Values.externalPostgresql.password }}
-        - name: POSTGRES_PASSWORD
-          value: {{ .Values.externalPostgresql.password | quote }}
-        {{- else if .Values.externalPostgresql.existingSecret }}
-        - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.externalPostgresql.existingSecret }}
-              key: {{ default "postgresql-password" .Values.externalPostgresql.existingSecretKey }}
-        {{- end }}
+{{ include "sentry.env" . | indent 8 }}
         {{- if .Values.hooks.novumBootstrap.env }}
 {{ toYaml .Values.hooks.novumBootstrap.env | indent 8 }}
         {{- end }}
         volumeMounts:
+        - mountPath: {{ .Values.filestore.filesystem.path }}
+          name: sentry-data
         - mountPath: /etc/sentry
           name: config
           readOnly: true
@@ -137,6 +111,22 @@ spec:
 {{- if .Values.hooks.novumBootstrap.volumes }}
 {{ toYaml .Values.hooks.novumBootstrap.volumes | indent 6 }}
 {{- end }}
+      # sentry-data is not really used here, but it's present to make sure it's available
+      # and can be mounted or fail if it is not.
+      # This avoids the case of a successful Helm installation but with sentry-web, sentry-worker, etc. left in
+      # "Pending" state forever
+      - name: sentry-data
+      {{- if and (eq .Values.filestore.backend "filesystem") .Values.filestore.filesystem.persistence.enabled }}
+      {{- if .Values.filestore.filesystem.persistence.existingClaim }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.filestore.filesystem.persistence.existingClaim }}
+      {{- else }}
+        persistentVolumeClaim:
+          claimName: {{ template "sentry.fullname" . }}-data
+      {{- end }}
+      {{- else }}
+        emptyDir: {}
+      {{ end }}
       {{- if .Values.hooks.shareProcessNamespace }}
       shareProcessNamespace: {{ .Values.hooks.shareProcessNamespace }}
       {{- end }}
