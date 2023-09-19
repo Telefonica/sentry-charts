@@ -31,33 +31,34 @@ data:
     ##########
     # Github #
     ##########
-    {{- if .Values.github.appId }}
-    github-app.id: {{ .Values.github.appId }}
+    {{- with .Values.github.appId }}
+    github-app.id: {{ . }}
     {{- end }}
-    {{- if .Values.github.appName }}
-    github-app.name: {{ .Values.github.appName | quote }}
+    {{- with .Values.github.appName }}
+    github-app.name: {{ . | quote }}
     {{- end }}
-    {{- if .Values.github.privateKey }}
-    github-app.private-key: |-
-{{ .Values.github.privateKey | indent 8 }}
-    {{- end }}
-    {{- if .Values.github.webhookSecret }}
-    github-app.webhook-secret: {{ .Values.github.webhookSecret | quote }}
-    {{- end }}
-    {{- if .Values.github.clientId }}
-    github-app.client-id: {{ .Values.github.clientId | quote }}
-    {{- end }}
-    {{- if .Values.github.clientSecret }}
-    github-app.client-secret: {{ .Values.github.clientSecret | quote }}
+    {{- if not .Values.github.existingSecret }}
+      {{- with .Values.github.privateKey }}
+    github-app.private-key: {{- . | toYaml | indent 4 }}
+      {{- end }}
+      {{- with .Values.github.webhookSecret }}
+    github-app.webhook-secret: {{ . | quote }}
+      {{- end }}
+      {{- with .Values.github.clientId }}
+    github-app.client-id: {{ . | quote }}
+      {{- end }}
+      {{- with .Values.github.clientSecret }}
+    github-app.client-secret: {{ . | quote }}
+      {{- end }}
     {{- end }}
 
     ##########
     # Google #
     ##########
-    {{- if .Values.google.clientId }}
+    {{- if and (.Values.google.clientId) (.Values.google.clientSecret) (not .Values.google.existingSecret) }}
     auth-google.client-id: {{ .Values.google.clientId | quote }}
     auth-google.client-secret: {{ .Values.google.clientSecret | quote }}
-    {{ end }}
+    {{- end }}
 
     #########
     # Slack #
@@ -134,6 +135,12 @@ data:
     from sentry.conf.server import *  # NOQA
     from distutils.util import strtobool
 
+    BYTE_MULTIPLIER = 1024
+    UNITS = ("K", "M", "G")
+    def unit_text_to_bytes(text):
+        unit = text[-1].upper()
+        power = UNITS.index(unit) + 1
+        return float(text[:-1])*(BYTE_MULTIPLIER**power)
 
     {{- if .Values.sourcemaps.enabled }}
     CACHES = {
@@ -141,7 +148,11 @@ data:
             "BACKEND": "django.core.cache.backends.memcached.MemcachedCache",
             "LOCATION": [
                 "{{ template "sentry.fullname" . }}-memcached:11211"
-            ]
+            ],
+            "TIMEOUT": 3600,
+            "OPTIONS": {
+                "server_max_value_length": unit_text_to_bytes(env("SENTRY_MAX_EXTERNAL_SOURCEMAP_SIZE", "1M")),
+            },
         }
     }
     import memcache
@@ -424,6 +435,19 @@ data:
                 "organizations:metrics",
                 "organizations:metrics-extraction",
                 "organizations:transaction-metrics-extraction",
+                "organizations:session-replay",
+                "organizations:issue-platform",
+
+                {{- if .Values.sentry.features.enableProfiling }}
+                "organizations:profiling",
+                "organizations:profiling-ui-frames",
+                "organizations:profiling-using-transactions",
+                "organizations:profiling-beta",
+                "organizations:profiling-stacktrace-links",
+                "organizations:profiling-global-suspect-functions",
+                "organizations:profiling-cpu-chart",
+                "organizations:profiling-memory-chart",
+                {{ end -}}
 
                 "projects:alert-filters",
                 "projects:custom-inbound-filters",
@@ -458,7 +482,7 @@ data:
 
     #########################
     # Bitbucket Integration #
-    ########################
+    #########################
 
     # BITBUCKET_CONSUMER_KEY = 'YOUR_BITBUCKET_CONSUMER_KEY'
     # BITBUCKET_CONSUMER_SECRET = 'YOUR_BITBUCKET_CONSUMER_SECRET'
@@ -468,6 +492,14 @@ data:
     #########
     SENTRY_RELAY_WHITELIST_PK = []
     SENTRY_RELAY_OPEN_REGISTRATION = True
+
+    #######################
+    # OpenAi Suggestions #
+    #######################
+    
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+    if OPENAI_API_KEY:
+      SENTRY_FEATURES["organizations:open-ai-suggestion"] = True
 
 {{- if .Values.metrics.enabled }}
     SENTRY_METRICS_BACKEND = 'sentry.metrics.statsd.StatsdMetricsBackend'
@@ -484,6 +516,24 @@ data:
     SENTRY_OPTIONS['slack.client-id'] = os.environ.get("SLACK_CLIENT_ID")
     SENTRY_OPTIONS['slack.client-secret'] = os.environ.get("SLACK_CLIENT_SECRET")
     SENTRY_OPTIONS['slack.signing-secret'] = os.environ.get("SLACK_SIGNING_SECRET")
+{{- end }}
+
+{{- if .Values.google.existingSecret }}
+    #########
+    # GOOGLE #
+    #########
+    SENTRY_OPTIONS['auth-google.client-id'] = os.environ.get("GOOGLE_AUTH_CLIENT_ID")
+    SENTRY_OPTIONS['auth-google.client-secret'] = os.environ.get("GOOGLE_AUTH_CLIENT_SECRET")
+{{- end }}
+
+{{- if .Values.github.existingSecret }}
+    ##########
+    # Github #
+    ##########
+    SENTRY_OPTIONS['github-app.private-key'] = os.environ.get("GITHUB_APP_PRIVATE_KEY")
+    SENTRY_OPTIONS['github-app.webhook-secret'] = os.environ.get("GITHUB_APP_WEBHOOK_SECRET")
+    SENTRY_OPTIONS['github-app.client-id'] = os.environ.get("GITHUB_APP_CLIENT_ID")
+    SENTRY_OPTIONS['github-app.client-secret'] = os.environ.get("GITHUB_APP_CLIENT_SECRET")
 {{- end }}
 {{ .Values.config.sentryConfPy | indent 4 }}
 

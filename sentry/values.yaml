@@ -36,7 +36,12 @@ images:
     imagePullSecrets: []
   symbolicator:
     # repository: getsentry/symbolicator
-    tag: 0.6.0
+    # tag: Chart.AppVersion
+    # pullPolicy: IfNotPresent
+    imagePullSecrets: []
+  vroom:
+    # repository: getsentry/vroom
+    # tag: Chart.AppVersion
     # pullPolicy: IfNotPresent
     imagePullSecrets: []
 
@@ -49,6 +54,39 @@ serviceAccount:
   name: "sentry"
   # serviceAccount.automountServiceAccountToken -- Automount API credentials for a Service Account.
   automountServiceAccountToken: true
+
+vroom:
+  replicas: 1
+  env: []
+  probeFailureThreshold: 5
+  probeInitialDelaySeconds: 10
+  probePeriodSeconds: 10
+  probeSuccessThreshold: 1
+  probeTimeoutSeconds: 2
+  resources: {}
+  affinity: {}
+  nodeSelector: {}
+  securityContext: {}
+  containerSecurityContext: {}
+  service:
+    annotations: {}
+  # tolerations: []
+  # podLabels: []
+
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 50
+  sidecars: []
+  volumes: []
+  volumeMounts: []
+  init:
+    resources: {}
+    # additionalArgs: []
+    # env: []
+    # volumes: []
+    # volumeMounts: []
 
 relay:
   replicas: 1
@@ -64,6 +102,7 @@ relay:
   affinity: {}
   nodeSelector: {}
   securityContext: {}
+  containerSecurityContext: {}
   service:
     annotations: {}
   # tolerations: []
@@ -108,6 +147,7 @@ sentry:
     affinity: {}
     nodeSelector: {}
     securityContext: {}
+    containerSecurityContext: {}
     service:
       annotations: {}
     # tolerations: []
@@ -129,6 +169,7 @@ sentry:
   features:
     orgSubdomains: false
     vstsLimitedScopes: true
+    enableProfiling: false
 
   worker:
     replicas: 3
@@ -164,6 +205,7 @@ sentry:
     affinity: {}
     nodeSelector: {}
     securityContext: {}
+    containerSecurityContext: {}
     # tolerations: []
     # podLabels: []
     # maxBatchSize: ""
@@ -190,6 +232,7 @@ sentry:
     affinity: {}
     nodeSelector: {}
     securityContext: {}
+    containerSecurityContext: {}
     # tolerations: []
     # podLabels: []
     # maxBatchSize: ""
@@ -216,9 +259,109 @@ sentry:
     affinity: {}
     nodeSelector: {}
     securityContext: {}
+    containerSecurityContext: {}
     # tolerations: []
     # podLabels: []
     # maxBatchSize: ""
+
+    # it's better to use prometheus adapter and scale based on
+    # the size of the rabbitmq queue
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPUUtilizationPercentage: 50
+    sidecars: []
+    volumes: []
+
+    # volumeMounts:
+    #   - mountPath: /dev/shm
+    #     name: dshm
+
+  ingestReplayRecordings:
+    replicas: 1
+    env: []
+    resources: {}
+    affinity: {}
+    nodeSelector: {}
+    securityContext: {}
+    containerSecurityContext: {}
+    # tolerations: []
+    # podLabels: []
+
+    # it's better to use prometheus adapter and scale based on
+    # the size of the rabbitmq queue
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPUUtilizationPercentage: 50
+    sidecars: []
+    volumes: []
+
+    # volumeMounts:
+    #   - mountPath: /dev/shm
+    #     name: dshm
+
+  ingestProfiles:
+    replicas: 1
+    env: []
+    resources: {}
+    affinity: {}
+    nodeSelector: {}
+    securityContext: {}
+    containerSecurityContext: {}
+    # tolerations: []
+    # podLabels: []
+
+    # it's better to use prometheus adapter and scale based on
+    # the size of the rabbitmq queue
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPUUtilizationPercentage: 50
+    sidecars: []
+    volumes: []
+
+    # volumeMounts:
+    #   - mountPath: /dev/shm
+    #     name: dshm
+  ingestOccurrences:
+    replicas: 1
+    env: []
+    resources: {}
+    affinity: {}
+    nodeSelector: {}
+    securityContext: {}
+    containerSecurityContext: {}
+    # tolerations: []
+    # podLabels: []
+
+    # it's better to use prometheus adapter and scale based on
+    # the size of the rabbitmq queue
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPUUtilizationPercentage: 50
+    sidecars: []
+    volumes: []
+
+    # volumeMounts:
+    #   - mountPath: /dev/shm
+    #     name: dshm
+
+  ingestMonitors:
+    replicas: 1
+    env: []
+    resources: {}
+    affinity: {}
+    nodeSelector: {}
+    securityContext: {}
+    containerSecurityContext: {}
+    # tolerations: []
+    # podLabels: []
 
     # it's better to use prometheus adapter and scale based on
     # the size of the rabbitmq queue
@@ -242,6 +385,7 @@ sentry:
     affinity: {}
     nodeSelector: {}
     securityContext: {}
+    containerSecurityContext: {}
     # tolerations: []
     # podLabels: []
     # maxBatchSize: ""
@@ -279,9 +423,24 @@ sentry:
     affinity: {}
     nodeSelector: {}
     securityContext: {}
+    containerSecurityContext: {}
     # tolerations: []
     # podLabels: []
-    # commitBatchSize: 1
+    sidecars: []
+    volumes: []
+    # noStrictOffsetReset: false
+    # volumeMounts: []
+
+  subscriptionConsumerSessions:
+    replicas: 1
+    env: []
+    resources: {}
+    affinity: {}
+    nodeSelector: {}
+    securityContext: {}
+    containerSecurityContext: {}
+    # tolerations: []
+    # podLabels: []
     sidecars: []
     volumes: []
     # noStrictOffsetReset: false
@@ -294,9 +453,9 @@ sentry:
     affinity: {}
     nodeSelector: {}
     securityContext: {}
+    containerSecurityContext: {}
     # tolerations: []
     # podLabels: []
-    # commitBatchSize: 1
     sidecars: []
     volumes: []
     # noStrictOffsetReset: false
@@ -309,9 +468,9 @@ sentry:
     affinity: {}
     nodeSelector: {}
     securityContext: {}
+    containerSecurityContext: {}
     # tolerations: []
     # podLabels: []
-    # commitBatchSize: 1
     sidecars: []
     volumes: []
     # volumeMounts: []
@@ -323,9 +482,22 @@ sentry:
     affinity: {}
     nodeSelector: {}
     securityContext: {}
+    containerSecurityContext: {}
     # tolerations: []
     # podLabels: []
-    # commitBatchSize: 1
+    sidecars: []
+    volumes: []
+    # volumeMounts: []
+  postProcessForwardIssuePlatform:
+    replicas: 1
+    env: []
+    resources: {}
+    affinity: {}
+    nodeSelector: {}
+    securityContext: {}
+    containerSecurityContext: {}
+    # tolerations: []
+    # podLabels: []
     sidecars: []
     volumes: []
     # volumeMounts: []
@@ -340,6 +512,7 @@ sentry:
     schedule: "0 0 * * *"
     days: 90
     # securityContext: {}
+    # containerSecurityContext: {}
     sidecars: []
     volumes: []
     # volumeMounts: []
@@ -363,6 +536,7 @@ snuba:
     affinity: {}
     nodeSelector: {}
     securityContext: {}
+    containerSecurityContext: {}
     service:
       annotations: {}
     # tolerations: []
@@ -384,6 +558,7 @@ snuba:
     affinity: {}
     nodeSelector: {}
     securityContext: {}
+    containerSecurityContext: {}
     # tolerations: []
     # podLabels: []
     autoOffsetReset: "earliest"
@@ -411,6 +586,7 @@ snuba:
     affinity: {}
     nodeSelector: {}
     securityContext: {}
+    containerSecurityContext: {}
     # tolerations: []
     # podLabels: []
     autoOffsetReset: "earliest"
@@ -438,10 +614,10 @@ snuba:
     affinity: {}
     nodeSelector: {}
     securityContext: {}
+    containerSecurityContext: {}
     # tolerations: []
     # podLabels: []
     autoOffsetReset: "earliest"
-    maxBatchSize: "3"
     # maxBatchTimeMs: ""
     # queuedMaxMessagesKbytes: ""
     # queuedMinMessages: ""
@@ -455,6 +631,7 @@ snuba:
     affinity: {}
     nodeSelector: {}
     securityContext: {}
+    containerSecurityContext: {}
     # tolerations: []
     # podLabels: []
     autoOffsetReset: "earliest"
@@ -468,11 +645,57 @@ snuba:
     affinity: {}
     nodeSelector: {}
     securityContext: {}
+    containerSecurityContext: {}
     # tolerations: []
     # podLabels: []
     autoOffsetReset: "earliest"
     # volumes: []
     # volumeMounts: []
+
+  subscriptionConsumerSessions:
+    replicas: 1
+    env: []
+    resources: {}
+    affinity: {}
+    nodeSelector: {}
+    securityContext: {}
+    containerSecurityContext: {}
+    # tolerations: []
+    # podLabels: []
+    # commitBatchSize: 1
+    autoOffsetReset: "earliest"
+    sidecars: []
+    volumes: []
+    # noStrictOffsetReset: false
+    # volumeMounts: []
+
+  replaysConsumer:
+    replicas: 1
+    env: []
+    resources: {}
+    affinity: {}
+    nodeSelector: {}
+    securityContext: {}
+    containerSecurityContext: {}
+    # tolerations: []
+    # podLabels: []
+    autoOffsetReset: "earliest"
+    # noStrictOffsetReset: false
+    # maxBatchSize: ""
+    # processes: ""
+    # inputBlockSize: ""
+    # outputBlockSize: ""
+    # maxBatchTimeMs: ""
+    # queuedMaxMessagesKbytes: ""
+    # queuedMinMessages: ""
+
+    # volumeMounts:
+    #   - mountPath: /dev/shm
+    #     name: dshm
+    # volumes:
+    #   - name: dshm
+    #     emptyDir:
+    #       medium: Memory
 
   sessionsConsumer:
     replicas: 1
@@ -481,6 +704,7 @@ snuba:
     affinity: {}
     nodeSelector: {}
     securityContext: {}
+    containerSecurityContext: {}
     # tolerations: []
     # podLabels: []
     autoOffsetReset: "earliest"
@@ -508,6 +732,90 @@ snuba:
     affinity: {}
     nodeSelector: {}
     securityContext: {}
+    containerSecurityContext: {}
+    # tolerations: []
+    # podLabels: []
+    autoOffsetReset: "earliest"
+    # noStrictOffsetReset: false
+    # maxBatchSize: ""
+    # processes: ""
+    # inputBlockSize: ""
+    # outputBlockSize: ""
+    # maxBatchTimeMs: ""
+    # queuedMaxMessagesKbytes: ""
+    # queuedMinMessages: ""
+
+    # volumeMounts:
+    #   - mountPath: /dev/shm
+    #     name: dshm
+    # volumes:
+    #   - name: dshm
+    #     emptyDir:
+    #       medium: Memory
+
+  profilingProfilesConsumer:
+    replicas: 1
+    env: []
+    resources: {}
+    affinity: {}
+    nodeSelector: {}
+    securityContext: {}
+    containerSecurityContext: {}
+    # tolerations: []
+    # podLabels: []
+    autoOffsetReset: "earliest"
+    # noStrictOffsetReset: false
+    # maxBatchSize: ""
+    # processes: ""
+    # inputBlockSize: ""
+    # outputBlockSize: ""
+    # maxBatchTimeMs: ""
+    # queuedMaxMessagesKbytes: ""
+    # queuedMinMessages: ""
+
+    # volumeMounts:
+    #   - mountPath: /dev/shm
+    #     name: dshm
+    # volumes:
+    #   - name: dshm
+    #     emptyDir:
+    #       medium: Memory
+
+  profilingFunctionsConsumer:
+    replicas: 1
+    env: []
+    resources: {}
+    affinity: {}
+    nodeSelector: {}
+    securityContext: {}
+    containerSecurityContext: {}
+    # tolerations: []
+    # podLabels: []
+    autoOffsetReset: "earliest"
+    # noStrictOffsetReset: false
+    # maxBatchSize: ""
+    # processes: ""
+    # inputBlockSize: ""
+    # outputBlockSize: ""
+    # maxBatchTimeMs: ""
+    # queuedMaxMessagesKbytes: ""
+    # queuedMinMessages: ""
+
+    # volumeMounts:
+    #   - mountPath: /dev/shm
+    #     name: dshm
+    # volumes:
+    #   - name: dshm
+    #     emptyDir:
+    #       medium: Memory
+  issueOccurrenceConsumer:
+    replicas: 1
+    env: []
+    resources: {}
+    affinity: {}
+    nodeSelector: {}
+    securityContext: {}
+    containerSecurityContext: {}
     # tolerations: []
     # podLabels: []
     autoOffsetReset: "earliest"
@@ -534,33 +842,6 @@ snuba:
   migrateJob:
     env: []
 
-  cleanupErrors:
-    successfulJobsHistoryLimit: 5
-    activeDeadlineSeconds: 100
-    concurrencyPolicy: Allow
-    enabled: true
-    schedule: "0 * * * *"
-    sidecars: []
-    volumes: []
-    # securityContext: {}
-    serviceAccount: {}
-    # volumes: []
-    # volumeMounts: []
-
-  cleanupTransactions:
-    successfulJobsHistoryLimit: 5
-    failedJobsHistoryLimit: 5
-    activeDeadlineSeconds: 100
-    concurrencyPolicy: Allow
-    enabled: true
-    schedule: "0 * * * *"
-    sidecars: []
-    volumes: []
-    # securityContext: {}
-    serviceAccount: {}
-    # volumes: []
-    # volumeMounts: []
-
 hooks:
   enabled: true
   removeOnSuccess: true
@@ -584,6 +865,7 @@ hooks:
     affinity: {}
     nodeSelector: {}
     securityContext: {}
+    containerSecurityContext: {}
     # tolerations: []
     # volumes: []
     # volumeMounts: []
@@ -605,6 +887,11 @@ hooks:
     # volumes: []
     # volumeMounts: []
   snubaInit:
+    # As snubaInit doesn't support configuring partition and replication factor, you can disable snubaInit's kafka topic creation by setting `kafka.enabled` to `false`,
+    # and create the topics using `kafka.provisioning.topics` with the desired partition and replication factor.
+    # Note that when you set `kafka.enabled` to `false`, snuba component might fail to start if newly added topics are not created by `kafka.provisioning`.
+    kafka:
+      enabled: true
     # podLabels: []
     podAnnotations: {}
     resources:
@@ -657,6 +944,7 @@ symbolicator:
     affinity: {}
     nodeSelector: {}
     securityContext: {}
+    containerSecurityContext: {}
     # tolerations: []
     # podLabels: []
     # priorityClassName: "xxx"
@@ -720,13 +1008,29 @@ github: {}
 #   clientId: "xxxxx"
 #   clientSecret: "xxxxx"
 #   privateKey: "-----BEGIN RSA PRIVATE KEY-----\nMIIEpA" !!!! Don't forget a trailing \n
-#   webhookSecret:  "xxxxx`"
+#   webhookSecret:  "xxxxx"
+#
+#   Note: if you use `existingSecret`, all above `clientId`, `clientSecret`, `privateKey`, `webhookSecret`
+#   params would be ignored, because chart will suppose that they are stored in `existingSecret`. So you
+#   must define all required keys and set it at least to empty strings if they are not needed in `existingSecret`
+#   secret (client-id, client-secret, webhook-secret, private-key)
+#
+#   existingSecret: "xxxxx"
+#   existingSecretPrivateKeyKey: ""     # by default "private-key"
+#   existingSecretWebhookSecretKey: ""  # by default "webhook-secret"
+#   existingSecretClientIdKey: ""       # by default "client-id"
+#   existingSecretClientSecretKey: ""   # by default "client-secret"
+#
+#   Reference -> https://docs.sentry.io/product/integrations/source-code-mgmt/github/
 
 # https://developers.google.com/identity/sign-in/web/server-side-flow#step_1_create_a_client_id_and_client_secret
 google: {}
 # google:
-#   clientId:
-#   clientSecret:
+#   clientId: ""
+#   clientSecret: ""
+#   existingSecret: ""
+#   existingSecretClientIdKey: "" # by default "client-id"
+#   existingSecretClientSecretKey: "" # by default "client-secret"
 
 slack: {}
 # slack:
@@ -735,6 +1039,10 @@ slack: {}
 #   signingSecret:
 #   existingSecret:
 #   Reference -> https://develop.sentry.dev/integrations/slack/
+
+openai: {}
+#   existingSecret: "xxxxx"
+#   existingSecretKey: ""   # by default "api-token"
 
 nginx:
   enabled: true
@@ -841,7 +1149,7 @@ config:
 clickhouse:
   enabled: true
   clickhouse:
-    imageVersion: "20.8.19.4"
+    imageVersion: "21.8.13.6"
     configmap:
       remote_servers:
         internal_replication: true
@@ -923,7 +1231,90 @@ kafka:
   maxMessageBytes: "50000000"
   # 50 MB
   socketRequestMaxBytes: "50000000"
-
+  provisioning:
+    enabled: true
+    # Topic list is based on files below.
+    # - https://github.com/getsentry/snuba/blob/master/snuba/utils/streams/topics.py
+    # - https://github.com/getsentry/self-hosted/blob/master/install/create-kafka-topics.sh#L6
+    # Note that snuba component might fail if you set `hooks.snubaInit.kafka.enabled` to `false` and remove the topics from this default topic list.
+    topics:
+      - name: events
+        config:
+          "message.timestamp.type": LogAppendTime
+      - name: event-replacements
+      - name: snuba-commit-log
+      - name: cdc
+      - name: transactions
+        config:
+          "message.timestamp.type": LogAppendTime
+      - name: snuba-transactions-commit-log
+      - name: snuba-metrics
+        config:
+          "message.timestamp.type": LogAppendTime
+      - name: outcomes
+      - name: ingest-sessions
+      - name: snuba-sessions-commit-log
+      - name: snuba-metrics-commit-log
+      - name: scheduled-subscriptions-events
+      - name: scheduled-subscriptions-transactions
+      - name: scheduled-subscriptions-sessions
+      - name: scheduled-subscriptions-metrics
+      - name: scheduled-subscriptions-generic-metrics-sets
+      - name: scheduled-subscriptions-generic-metrics-distributions
+      - name: scheduled-subscriptions-generic-metrics-counters
+      - name: events-subscription-results
+      - name: transactions-subscription-results
+      - name: sessions-subscription-results
+      - name: metrics-subscription-results
+      - name: generic-metrics-subscription-results
+      - name: snuba-queries
+        config:
+          "message.timestamp.type": LogAppendTime
+      - name: processed-profiles
+        config:
+          "message.timestamp.type": LogAppendTime
+      - name: profiles-call-tree
+      - name: ingest-replay-events
+        config:
+          "message.timestamp.type": LogAppendTime
+          "max.message.bytes": "15000000"
+      - name: snuba-generic-metrics
+        config:
+          "message.timestamp.type": LogAppendTime
+      - name: snuba-generic-metrics-sets-commit-log
+      - name: snuba-generic-metrics-distributions-commit-log
+      - name: snuba-generic-metrics-counters-commit-log
+      - name: generic-events
+        config:
+          "message.timestamp.type": LogAppendTime
+      - name: snuba-generic-events-commit-log
+      - name: group-attributes
+        config:
+          "message.timestamp.type": LogAppendTime
+      - name: snuba-attribution
+      - name: snuba-dead-letter-metrics
+      - name: snuba-dead-letter-metrics-sets
+      - name: snuba-dead-letter-metrics-counters
+      - name: snuba-dead-letter-metrics-distributions
+      - name: snuba-dead-letter-sessions
+      - name: snuba-dead-letter-generic-metrics
+      - name: snuba-dead-letter-replays
+      - name: snuba-dead-letter-generic-events
+      - name: snuba-dead-letter-querylog
+      - name: snuba-dead-letter-group-attributes
+      - name: ingest-attachments
+      - name: ingest-transactions
+      - name: ingest-events
+      - name: ingest-replay-recordings
+      - name: ingest-metrics
+      - name: ingest-performance-metrics
+      - name: ingest-monitors
+      - name: profiles
+      - name: ingest-occurrences
+  zookeeper:
+    enabled: true
+  kraft:
+    enabled: false
   service:
     ports:
       client: 9092
@@ -980,8 +1371,8 @@ externalRedis:
 postgresql:
   enabled: true
   nameOverride: sentry-postgresql
-  postgresqlUsername: postgres
-  postgresqlDatabase: sentry
+  auth:
+    database: sentry
   replication:
     enabled: false
     readReplicas: 2
@@ -1124,6 +1515,7 @@ metrics:
   tolerations: []
   affinity: {}
   securityContext: {}
+  containerSecurityContext: {}
   # schedulerName:
   # Optional extra labels for pod, i.e. redis-client: "true"
   # podLabels: []

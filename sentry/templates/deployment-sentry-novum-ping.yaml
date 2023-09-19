@@ -90,7 +90,7 @@ spec:
 {{- if .Values.sentry.novumPing.volumeMounts }}
 {{ toYaml .Values.sentry.novumPing.volumeMounts | indent 8 }}
 {{- end }}
-{{- if .Values.sentry.novumPing.resource }}
+{{- if .Values.sentry.novumPing.resources }}
         resources:
 {{ toYaml .Values.sentry.novumPing.resources | indent 12 }}
 {{- end }}

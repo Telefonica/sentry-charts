@@ -75,11 +75,12 @@ spec:
         command: ["sentry"]
         args:
           - "run"
+          - "consumer" 
+          - "post-process-forwarder-errors"
+          - "--consumer-group"
           - "post-process-forwarder"
-          - "--commit-batch-size"
-          - "{{ default "1" .Values.sentry.postProcessForwardErrors.commitBatchSize }}"
-          - "--entity"
-          - "errors"
+          - "--synchronize-commit-log-topic=snuba-commit-log"
+          - "--synchronize-commit-group=snuba-consumers"
         env:
 {{ include "sentry.env" . | indent 8 }}
 {{- if .Values.sentry.postProcessForwardErrors.env }}
@@ -100,6 +101,10 @@ spec:
 {{- end }}
         resources:
 {{ toYaml .Values.sentry.postProcessForwardErrors.resources | indent 12 }}
+{{- if .Values.sentry.postProcessForwardErrors.containerSecurityContext }}
+        securityContext:
+{{ toYaml .Values.sentry.postProcessForwardErrors.containerSecurityContext | indent 12 }}
+{{- end }}
 {{- if .Values.sentry.postProcessForwardErrors.sidecars }}
 {{ toYaml .Values.sentry.postProcessForwardErrors.sidecars | indent 6 }}
 {{- end }}

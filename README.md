@@ -1,8 +1,8 @@
-# Sentry 10 helm charts
+# Sentry helm charts
 
 Sentry is a cross-platform crash reporting and aggregation platform.
 
-This repository aims to support Sentry 10 and move out from the deprecated Helm charts official repo.
+This repository aims to support Sentry >=10 and move out from the deprecated Helm charts official repo.
 
 Big thanks to the maintainers of the [deprecated chart](https://github.com/helm/charts/tree/master/stable/sentry). This work has been partly inspired by it.
 
@@ -14,6 +14,39 @@ Big thanks to the maintainers of the [deprecated chart](https://github.com/helm/
 
 For now the full list of values is not documented but you can get inspired by the values.yaml specific to each directory.
 
+## Upgrading from 19.x.x version of this Chart to 20.x.x
+
+Bumped dependencies:
+- kafka > 22.1.3 - now supports Kraft. Note that the upgrade is breaking and that you have to start a new kafka from scratch to use it.
+
+Example:
+
+```
+kafka:
+  zookeeper:
+    enabled: false
+  kraft:
+    enabled: true
+```
+
+
+## Upgrading from 18.x.x version of this Chart to 19.x.x
+
+Chart dependencies has been upgraded because of sentry requirements. 
+Changes:
+- The minimum required version of Postgresql is 14.5 (works with 15.x too)
+
+Bumped dependencies:
+- postgresql > 12.5.1 - latest wersion of chart with postgres 15
+
+
+## Upgrading from 17.x.x version of this Chart to 18.x.x
+
+If Kafka is complaining about unknown or missing topic, please connect to kafka-0 and run 
+
+`/opt/bitnami/kafka/bin/kafka-topics.sh --create --topic ingest-replay-recordings --bootstrap-server localhost:9092`
+
+
 ## Upgrading from 16.x.x version of this Chart to 17.x.x
 
 Sentry version from 22.10.0 onwards should be using chart 17.x.x
@@ -22,6 +55,8 @@ Sentry version from 22.10.0 onwards should be using chart 17.x.x
 
 You can delete the deployment "sentry-post-process-forward" as it's no longer needed.
 
+`sentry-worker` may failed to start by [#774](https://github.com/sentry-kubernetes/charts/issues/774).
+If you encountered this issue, please reset `counters-0`, `triggers-0` queues.
 
 
 ## Upgrading from 15.x.x version of this Chart to 16.x.x

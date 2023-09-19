@@ -1,7 +1,8 @@
+{{- if .Values.sentry.features.enableProfiling }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "sentry.fullname" . }}-ingest-consumer
+  name: {{ template "sentry.fullname" . }}-ingest-profiles
   labels:
     app: {{ template "sentry.fullname" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
@@ -22,9 +23,9 @@ spec:
     matchLabels:
       app: {{ template "sentry.fullname" . }}
       release: "{{ .Release.Name }}"
-      role: ingest-consumer
-{{- if not .Values.sentry.ingestConsumer.autoscaling.enabled }}
-  replicas: {{ .Values.sentry.ingestConsumer.replicas }}
+      role: ingest-profiles
+{{- if not .Values.sentry.ingestProfiles.autoscaling.enabled }}
+  replicas: {{ .Values.sentry.ingestProfiles.replicas }}
 {{- end }}
   template:
     metadata:
@@ -32,28 +33,28 @@ spec:
         checksum/configYml: {{ .Values.config.configYml | toYaml | toString | sha256sum }}
         checksum/sentryConfPy: {{ .Values.config.sentryConfPy | sha256sum }}
         checksum/config.yaml: {{ include (print $.Template.BasePath "/configmap-sentry.yaml") . | sha256sum }}
-        {{- if .Values.sentry.ingestConsumer.annotations }}
-{{ toYaml .Values.sentry.ingestConsumer.annotations | indent 8 }}
+        {{- if .Values.sentry.ingestProfiles.annotations }}
+{{ toYaml .Values.sentry.ingestProfiles.annotations | indent 8 }}
         {{- end }}
       labels:
         app: {{ template "sentry.fullname" . }}
         release: "{{ .Release.Name }}"
-        role: ingest-consumer
-        {{- if .Values.sentry.ingestConsumer.podLabels }}
-{{ toYaml .Values.sentry.ingestConsumer.podLabels | indent 8 }}
+        role: ingest-profiles
+        {{- if .Values.sentry.ingestProfiles.podLabels }}
+{{ toYaml .Values.sentry.ingestProfiles.podLabels | indent 8 }}
         {{- end }}
     spec:
       affinity:
-      {{- if .Values.sentry.ingestConsumer.affinity }}
-{{ toYaml .Values.sentry.ingestConsumer.affinity | indent 8 }}
+      {{- if .Values.sentry.ingestProfiles.affinity }}
+{{ toYaml .Values.sentry.ingestProfiles.affinity | indent 8 }}
       {{- end }}
-      {{- if .Values.sentry.ingestConsumer.nodeSelector }}
+      {{- if .Values.sentry.ingestProfiles.nodeSelector }}
       nodeSelector:
-{{ toYaml .Values.sentry.ingestConsumer.nodeSelector | indent 8 }}
+{{ toYaml .Values.sentry.ingestProfiles.nodeSelector | indent 8 }}
       {{- end }}
-      {{- if .Values.sentry.ingestConsumer.tolerations }}
+      {{- if .Values.sentry.ingestProfiles.tolerations }}
       tolerations:
-{{ toYaml .Values.sentry.ingestConsumer.tolerations | indent 8 }}
+{{ toYaml .Values.sentry.ingestProfiles.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.images.sentry.imagePullSecrets }}
       imagePullSecrets:
@@ -66,33 +67,24 @@ spec:
       dnsConfig:
 {{ toYaml .Values.dnsConfig | indent 8 }}
       {{- end }}
-      {{- if .Values.sentry.ingestConsumer.securityContext }}
+      {{- if .Values.sentry.ingestProfiles.securityContext }}
       securityContext:
-{{ toYaml .Values.sentry.ingestConsumer.securityContext | indent 8 }}
+{{ toYaml .Values.sentry.ingestProfiles.securityContext | indent 8 }}
       {{- end }}
       containers:
-      - name: {{ .Chart.Name }}-ingest-consumer
+      - name: {{ .Chart.Name }}-ingest-profiles
         image: "{{ template "sentry.image" . }}"
         imagePullPolicy: {{ default "IfNotPresent" .Values.images.sentry.pullPolicy }}
         command: ["sentry"]
         args:
           - "run"
-          - "ingest-consumer"
-          - "--all-consumer-types"
-          {{- if .Values.sentry.ingestConsumer.concurrency }}
-          - "--concurrency"
-          - "{{ .Values.sentry.ingestConsumer.concurrency }}"
-          {{- end }}
-          {{- if .Values.sentry.ingestConsumer.maxBatchSize }}
-          - "--max-batch-size"
-          - "{{ .Values.sentry.ingestConsumer.maxBatchSize }}"
-          {{- end }}
+          - "ingest-profiles"
         env:
         - name: C_FORCE_ROOT
           value: "true"
 {{ include "sentry.env" . | indent 8 }}
-{{- if .Values.sentry.ingestConsumer.env }}
-{{ toYaml .Values.sentry.ingestConsumer.env | indent 8 }}
+{{- if .Values.sentry.ingestProfiles.env }}
+{{ toYaml .Values.sentry.ingestProfiles.env | indent 8 }}
 {{- end }}
         volumeMounts:
         - mountPath: /etc/sentry
@@ -104,16 +96,20 @@ spec:
         - name: sentry-google-cloud-key
           mountPath: /var/run/secrets/google
         {{ end }}
-{{- if .Values.sentry.ingestConsumer.volumeMounts }}
-{{ toYaml .Values.sentry.ingestConsumer.volumeMounts | indent 8 }}
+{{- if .Values.sentry.ingestProfiles.volumeMounts }}
+{{ toYaml .Values.sentry.ingestProfiles.volumeMounts | indent 8 }}
 {{- end }}
         resources:
-{{ toYaml .Values.sentry.ingestConsumer.resources | indent 12 }}
-{{- if .Values.sentry.ingestConsumer.sidecars }}
-{{ toYaml .Values.sentry.ingestConsumer.sidecars | indent 6 }}
+{{ toYaml .Values.sentry.ingestProfiles.resources | indent 12 }}
+{{- if .Values.sentry.ingestProfiles.containerSecurityContext }}
+        securityContext:
+{{ toYaml .Values.sentry.ingestProfiles.containerSecurityContext | indent 12 }}
+{{- end }}
+{{- if .Values.sentry.ingestProfiles.sidecars }}
+{{ toYaml .Values.sentry.ingestProfiles.sidecars | indent 6 }}
 {{- end }}
       {{- if .Values.serviceAccount.enabled }}
-      serviceAccountName: {{ .Values.serviceAccount.name }}-ingest-consumer
+      serviceAccountName: {{ .Values.serviceAccount.name }}-ingest-profiles
       {{- end }}
       volumes:
       - name: config
@@ -136,9 +132,10 @@ spec:
         secret:
           secretName: {{ .Values.filestore.gcs.secretName }}
       {{ end }}
-{{- if .Values.sentry.ingestConsumer.volumes }}
-{{ toYaml .Values.sentry.ingestConsumer.volumes | indent 6 }}
+{{- if .Values.sentry.ingestProfiles.volumes }}
+{{ toYaml .Values.sentry.ingestProfiles.volumes | indent 6 }}
 {{- end }}
-      {{- if .Values.sentry.ingestConsumer.priorityClassName }}
-      priorityClassName: "{{ .Values.sentry.ingestConsumer.priorityClassName }}"
+      {{- if .Values.sentry.ingestProfiles.priorityClassName }}
+      priorityClassName: "{{ .Values.sentry.ingestProfiles.priorityClassName }}"
       {{- end }}
+{{- end }}
