@@ -1,8 +1,8 @@
-{{- if and .Values.postgresql.enabled (and .Values.postgresql.persistence.enabled .Values.postgresql.persistence.dedicatedDisk.enabled) -}}
+{{- if and .Values.postgresql.enabled (and .Values.postgresql.primary.persistence.enabled .Values.postgresql.primary.persistence.dedicatedDisk.enabled) -}}
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: {{ required "value for .Values.postgresql.persistence.existingClaim must be present to use a dedicated disk for PostgreSQL" .Values.postgresql.persistence.existingClaim }}
+  name: {{ required "value for .Values.postgresql.primary.persistence.existingClaim must be present to use a dedicated disk for PostgreSQL" .Values.postgresql.primary.persistence.existingClaim }}
   labels:
     app: {{ template "sentry.fullname" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
@@ -10,7 +10,7 @@ metadata:
     heritage: "{{ .Release.Service }}"
 spec:
   capacity:
-    storage: {{ default "32Gi" .Values.postgresql.persistence.size }}
+    storage: {{ default "32Gi" .Values.postgresql.primary.persistence.size }}
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
@@ -19,5 +19,5 @@ spec:
   csi:
     driver: disk.csi.azure.com
     readOnly: false
-    volumeHandle: {{ required "value for .Values.postgresql.persistence.dedicatedDisk.volumeHandle must be present to use a dedicated disk for PostgreSQL" .Values.postgresql.persistence.dedicatedDisk.volumeHandle }}
+    volumeHandle: {{ required "value for .Values.postgresql.primary.persistence.dedicatedDisk.volumeHandle must be present to use a dedicated disk for PostgreSQL" .Values.postgresql.primary.persistence.dedicatedDisk.volumeHandle }}
 {{- end }}
