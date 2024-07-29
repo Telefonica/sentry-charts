@@ -139,8 +139,7 @@ spec:
 {{ toYaml .Values.snuba.profilingFunctionsConsumer.env | indent 8 }}
 {{- end }}
         envFrom:
-        - secretRef:
-            name: {{ template "sentry.fullname" . }}-snuba-env
+{{ include "novum.sentry.snuba.envFrom" . | indent 8 }}
         volumeMounts:
         - mountPath: /etc/snuba
           name: config

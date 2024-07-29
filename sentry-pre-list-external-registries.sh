@@ -7,7 +7,7 @@ cd "$SCRIPT_DIR"
 source ./bash_util.sh
 
 function usage() {
-  echo "Usage: $(basename $0) [-h][-a][-k PATH][-t PATH]"
+  echo "Usage: $(basename "$0") [-h][-a][-k PATH][-t PATH]"
   echo "List container images from sentry-pre chart from external registries"
   echo ""
   echo "  -h         Show this help"
@@ -19,8 +19,8 @@ function usage() {
 
 TF_MODULE_KUBENOVUM=
 TEF_IAAC=
-OPTION_TF_MODULE_KUBENOVUM=
-OPTION_TEF_IAAC=
+declare -a OPTION_TF_MODULE_KUBENOVUM
+declare -a OPTION_TEF_IAAC
 LIST_ALL="no"
 
 while getopts "ahk:t:" OPT; do
@@ -34,11 +34,11 @@ while getopts "ahk:t:" OPT; do
       ;;
     k)
       TF_MODULE_KUBENOVUM="$OPTARG"
-      OPTION_TF_MODULE_KUBENOVUM="-k $OPTARG"
+      OPTION_TF_MODULE_KUBENOVUM=("-k" "$TF_MODULE_KUBENOVUM")
       ;;
     t)
       TEF_IAAC="$OPTARG"
-      OPTION_TEF_IAAC="-t $OPTARG"
+      OPTION_TEF_IAAC=("-t" "$TEF_IAAC")
       ;;
     *)
       echo "ERROR: Unknown option"
@@ -56,4 +56,4 @@ if [[ "$LIST_ALL" == "yes" ]]; then
   FILTER="cat"
 fi
 
-./sentry-pre-template.sh $OPTION_TEF_IAAC $OPTION_TF_MODULE_KUBENOVUM | docker_image_importer list | sort | $FILTER
+./sentry-pre-template.sh "${OPTION_TEF_IAAC[@]}" "${OPTION_TF_MODULE_KUBENOVUM[@]}" 2>/dev/null | grep -o '^\s*image:.*' | sed -e 's/^\s*image:\s*//' -e 's/^"//' -e 's/"$//' | sort | $FILTER

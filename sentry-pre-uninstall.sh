@@ -7,7 +7,7 @@ cd "$SCRIPT_DIR"
 NAMESPACE=tooling-pre
 
 function usage() {
-  echo "Usage: $(basename $0) [-h][-u][-y][-d][-r]"
+  echo "Usage: $(basename "$0") [-h][-u][-y][-d][-r]"
   echo "Uninstall sentry-pre from $NAMESPACE"
   echo ""
   echo "  -h  Show this help"

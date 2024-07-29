@@ -87,6 +87,8 @@ spec:
         env:
         - name: PYTHONUNBUFFERED
           value: "1"
+        - name: SENTRY_CLICKHOUSE_HOST
+          value: {{ include "sentry.clickhouse.host" . | quote }}
 {{ include "sentry.env" . | indent 8 }}
         {{- if .Values.hooks.novumBootstrap.env }}
 {{ toYaml .Values.hooks.novumBootstrap.env | indent 8 }}

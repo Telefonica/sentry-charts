@@ -9,7 +9,7 @@ source ./bash_util.sh
 NAMESPACE=tooling-pre
 
 function usage() {
-  echo "Usage: $(basename $0) [-h][-u][-y][-d][-r]"
+  echo "Usage: $(basename "$0") [-h][-u][-y][-d][-r]"
   echo "Install sentry-pre in $NAMESPACE"
   echo ""
   echo "  -h         Show this help"
@@ -24,6 +24,7 @@ function usage() {
 
 
 HELM_ACTION=install
+declare -a HELM_UPGRADE_OPTIONS
 ASK_CONFIRMATION=yes
 DEBUG_OPTION=
 DRY_RUN_OPTION=
@@ -38,6 +39,7 @@ while getopts "huydrk:t:" OPT; do
       ;;
     u)
       HELM_ACTION=upgrade
+      HELM_UPGRADE_OPTIONS=("--reset-values")
       ;;
     y)
       ASK_CONFIRMATION=no
@@ -70,7 +72,7 @@ echo "Using tef_iaac             ->  $TEF_IAAC"
 echo ""
 
 if [[ "$ASK_CONFIRMATION" == "yes" && -z "$DRY_RUN_OPTION" ]]; then
-  read -p "You are going to perform an \"helm $HELM_ACTION\" operation in $NAMESPACE. Are you sure? [y/N] " OPT
+  read -r -p "You are going to perform an \"helm $HELM_ACTION\" operation in $NAMESPACE. Are you sure? [y/N] " OPT
   if [[ "$OPT" != "y" && "$OPT" != "Y" ]]; then
     echo "Aborted"
     exit 0
@@ -78,4 +80,6 @@ if [[ "$ASK_CONFIRMATION" == "yes" && -z "$DRY_RUN_OPTION" ]]; then
 fi
 
 kubeswitch tooling/pre
-HELM_DRIVER=configmap helm -n $NAMESPACE $HELM_ACTION sentry-pre sentry $DRY_RUN_OPTION $DEBUG_OPTION -f "$TF_MODULE_KUBENOVUM/k8s-setup/chart-values/sentry.yaml" -f overrides/serviceaccount.yaml -f overrides/images.yaml -f overrides/sentry-pre-tooling-pre.yaml -f "$TEF_IAAC/environments/azure/northeurope09/prd.tooling/blue-k8s-infra/chart-values-override/sentry.yaml"
+helm_dependency_check "charts/sentry"
+
+HELM_DRIVER=configmap helm -n $NAMESPACE $HELM_ACTION sentry-pre charts/sentry "${HELM_UPGRADE_OPTIONS[@]}" --timeout 10m $DRY_RUN_OPTION $DEBUG_OPTION -f "$TF_MODULE_KUBENOVUM/k8s-setup/chart-values/sentry.yaml" -f overrides/serviceaccount.yaml -f overrides/images.yaml -f overrides/sentry-pre-tooling-pre.yaml -f "$TEF_IAAC/environments/azure/northeurope09/prd.tooling/blue-k8s-infra/chart-values-override/sentry.yaml" -f overrides/requests.yaml

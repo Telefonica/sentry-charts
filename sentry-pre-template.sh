@@ -7,7 +7,7 @@ cd "$SCRIPT_DIR"
 source ./bash_util.sh
 
 function usage() {
-  echo "Usage: $(basename $0) [-h][-k PATH][-t PATH]"
+  echo "Usage: $(basename "$0") [-h][-k PATH][-t PATH]"
   echo "Process the Sentry Helm Chart with overrides for sentry-pre and output the Kubernetes YAML"
   echo ""
   echo "  -h         Show this help"
@@ -42,4 +42,6 @@ shift $((OPTIND-1))
 
 find_and_validate_external_repositories
 
-helm -n tooling-pre template sentry-pre sentry -f "$TF_MODULE_KUBENOVUM/k8s-setup/chart-values/sentry.yaml" -f overrides/serviceaccount.yaml -f overrides/images.yaml -f overrides/sentry-pre-tooling-pre.yaml -f "$TEF_IAAC/environments/azure/northeurope09/prd.tooling/blue-k8s-infra/chart-values-override/sentry.yaml"
+helm_dependency_check "charts/sentry"
+
+helm -n tooling-pre template sentry-pre charts/sentry -f "$TF_MODULE_KUBENOVUM/k8s-setup/chart-values/sentry.yaml" -f overrides/serviceaccount.yaml -f overrides/images.yaml -f overrides/sentry-pre-tooling-pre.yaml -f "$TEF_IAAC/environments/azure/northeurope09/prd.tooling/blue-k8s-infra/chart-values-override/sentry.yaml" -f overrides/requests.yaml

@@ -1,0 +1,51 @@
+kafka:
+  controller:
+    resources:
+      requests:
+        memory: 3Gi
+    persistence:
+      size: 16Gi
+
+clickhouse:
+  clickhouse:
+    resources:
+      requests:
+        memory: 1536Mi # 1.5Gi
+    persistentVolumeClaim:
+      dataPersistentVolume:
+        storage: 32Gi
+
+postgresql:
+  resources:
+    requests:
+      memory: 6Gi
+
+relay:
+  resources:
+    requests:
+      memory: 2Gi
+
+sentry:
+  ingestConsumer:
+    resources:
+      requests:
+        memory: 256Mi
+  cleanup:
+    activeDeadlineSeconds: 7200
+  worker:
+    resources:
+      requests:
+        memory: 1792Mi
+
+snuba:
+  api:
+    resources:
+      requests:
+        memory: 3Gi
+
+
+zookeeper:
+  resources:
+    requests:
+      memory: 1Gi
+

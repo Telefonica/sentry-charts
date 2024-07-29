@@ -42,7 +42,7 @@ function find_and_validate_external_repositories() {
   fi
 
   # Simplifies the path, removing .., etc.
-  TF_MODULE_KUBENOVUM="$(cd $TF_MODULE_KUBENOVUM; pwd -P)"
+  TF_MODULE_KUBENOVUM="$(cd "$TF_MODULE_KUBENOVUM" || exit 1; pwd -P)"
 
   TEF_IAAC="${TEF_IAAC:-$DEFAULT_TEF_IAAC}"
   if ! is_valid_repo "$TEF_IAAC" "$FILE_TO_CHECK_TEF_IAAC"; then
@@ -52,5 +52,25 @@ function find_and_validate_external_repositories() {
   fi
 
   # Simplifies the path, removing .., etc.
-  TEF_IAAC="$(cd $TEF_IAAC; pwd -P)"
+  TEF_IAAC="$(cd "$TEF_IAAC" || exit 1; pwd -P)"
+}
+
+
+function helm_dependency_check() {
+  local DIR="$1"
+
+  local LIST_RESULT
+  local NOT_OK_LINES
+
+  # First check if any dependency is not ok
+  echo "Checking dependencies..." >&2
+  LIST_RESULT="$(helm dependency list "$DIR")"
+  echo "$LIST_RESULT" >&2
+  echo "" >&2
+  NOT_OK_LINES="$(echo "$LIST_RESULT" | tail +2 | awk '/^\s*$/{next} {if ($4 != "ok") {print $4}}')"
+  if [[ -n $NOT_OK_LINES ]]; then
+    echo "Building dependencies..." >&2
+    helm dependency build "$DIR" >&2
+    echo "" >&2
+  fi
 }

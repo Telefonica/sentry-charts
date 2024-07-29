@@ -624,4 +624,6 @@ sentry.conf.py: |-
   SENTRY_OPTIONS['github-app.client-secret'] = os.environ.get("GITHUB_APP_CLIENT_SECRET")
 {{- end }}
   {{ .Values.config.sentryConfPy | nindent 2 }}
+
+  {{ .Values.config.sentryExtraConfPy | default "" | indent 2 }}
 {{- end -}}
