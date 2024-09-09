@@ -1906,6 +1906,13 @@ kafka:
       - name: snuba-spans
       - name: shared-resources-usage
       - name: snuba-metrics-summaries
+  extraConfig: |-
+    num.partitions=12
+    log.retention.hours=3
+    log.roll.hours=1
+    log.retention.bytes=134217728
+    log.segment.bytes=67108864
+    default.replication.factor=3
   listeners:
     client:
       protocol: "PLAINTEXT"
