@@ -75,6 +75,8 @@ spec:
         - "sentry"
         - "exec"
         - "/usr/src/sentry/novum_bootstrap.py"
+        - "--clickhouse-cluster-name"
+        - {{ include "sentry.clickhouse.cluster.name" . | quote }}
         - "--verbose"
         {{- if .Values.novum.bootstrap }}
         - "--projects"
