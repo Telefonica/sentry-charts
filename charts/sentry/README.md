@@ -9,13 +9,13 @@ helm repo add sentry https://sentry-kubernetes.github.io/charts
 ## Without overrides
 
 ```
-helm install sentry sentry/sentry
+helm install sentry sentry/sentry --wait --timeout=1000s
 ```
 
 ## With your own values file
 
 ```
-helm install sentry sentry/sentry -f values.yaml
+helm install sentry sentry/sentry -f values.yaml --wait --timeout=1000s
 ```
 
 # Upgrade
@@ -71,7 +71,7 @@ Note: this table is incomplete, so have a look at the values.yaml in case you mi
 | `sentry.ingestConsumerEvents.enabled`       | Enable Sentry ingest consumer events                                                                                                                                | `true`                          |
 | `sentry.ingestConsumerTransactions.enabled`       | Enable Sentry ingest consumer transactions                                                                                                                                | `true`                          |
 | `sentry.ingestMonitors.enabled`       | Enable Sentry ingest monitors                                                                                                                                | `true`                          |
-| `sentry.ingestOccurrences.enabled`       | Enable Sentry ingest occurences                                                                                                                                | `true`                          |
+| `sentry.ingestOccurrences.enabled`       | Enable Sentry ingest occurrences                                                                                                                                | `true`                          |
 | `sentry.ingestReplayRecordings.enabled`       | Enable Sentry ingest replay recordings                                                                                                                                | `true`                          |
 | `sentry.metricsConsumer.enabled`       | Enable Sentry metrics consumer                                                                                                                                | `true`                          |
 | `sentry.postProcessForwardErrors.enabled`       | Enable Sentry post process forward errors                                                                                                                                | `true`                          |
@@ -107,7 +107,7 @@ Note: this table is incomplete, so have a look at the values.yaml in case you mi
 | `snuba.subscriptionConsumerMetrics.enabled`       | Enable Snuba subscription consumer metrics                                                                                                                                | `true`                          |
 | `snuba.subscriptionConsumerTransactions.enabled`       | Enable Snuba subscription consumer transactions                                                                                                                                | `true`                          |
 | `snuba.transactionsConsumer.enabled`       | Enable Snuba transactions consumer                                                                                                                                | `true`                          |
-| `symbolicator.api.enabled`                    | Enable Symbolicator                                                                                                                                                 | `false`                        |
+| `symbolicator.enabled`                    | Enable Symbolicator                                                                                                                                                 | `false`                        |
 | `symbolicator.api.config`                     | Config file for Symbolicator, see [its docs](https://getsentry.github.io/symbolicator/#configuration)                                                               | see values.yaml                |
 | `extraManifests`                              | Extra K8s manifests to deploy                                                                                                                                       | []                             |
 
@@ -269,7 +269,7 @@ externalPostgresql:
   database: sentry
 ```
 
-> ⚠️ `.Values.externalPostgresql.existingSecretKey` is depricated, `.Values.externalPostgresql.existingSecretKeys.password` should be used instead.
+> ⚠️ `.Values.externalPostgresql.existingSecretKey` is deprecated, `.Values.externalPostgresql.existingSecretKeys.password` should be used instead.
 
 # Usage
 

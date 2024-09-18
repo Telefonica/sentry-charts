@@ -24,7 +24,7 @@ images:
   sentry:
     # repository: getsentry/sentry
     # tag: Chart.AppVersion
-    tag: "24.5.1-novum3"
+    tag: "24.7.1-novum1"
     # pullPolicy: IfNotPresent
     imagePullSecrets: []
   snuba:
@@ -59,6 +59,8 @@ serviceAccount:
   automountServiceAccountToken: true
 
 vroom:
+  # annotations: {}
+  # args: []
   replicas: 1
   env: []
   probeFailureThreshold: 5
@@ -71,10 +73,11 @@ vroom:
   nodeSelector: {}
   securityContext: {}
   containerSecurityContext: {}
+  # priorityClassName: ""
   service:
     annotations: {}
   # tolerations: []
-  # podLabels: []
+  # podLabels: {}
 
   autoscaling:
     enabled: false
@@ -82,17 +85,13 @@ vroom:
     maxReplicas: 5
     targetCPUUtilizationPercentage: 50
   sidecars: []
+  # topologySpreadConstraints: []
   volumes: []
   volumeMounts: []
-  init:
-    resources: {}
-    # additionalArgs: []
-    # env: []
-    # volumes: []
-    # volumeMounts: []
 
 relay:
   enabled: true
+  # annotations: {}
   replicas: 1
   # args: []
   mode: managed
@@ -105,6 +104,8 @@ relay:
   resources: {}
   affinity: {}
   nodeSelector: {}
+  # healthCheck:
+  #   readinessRequestPath: ""
   securityContext: {}
   # if you are using GKE Ingress controller use 'securityPolicy' to add Google Cloud Armor Ingress policy
   securityPolicy: ""
@@ -114,8 +115,8 @@ relay:
   service:
     annotations: {}
   # tolerations: []
-  # podLabels: []
-
+  # podLabels: {}
+  # priorityClassName: ""
   autoscaling:
     enabled: false
     minReplicas: 2
@@ -132,6 +133,18 @@ relay:
     # env: []
     # volumes: []
     # volumeMounts: []
+  # cache:
+  #   envelopeBufferSize: 1000
+  # logging:
+  #   level: info
+  #   format: json
+  processing:
+    kafkaConfig:
+      messageMaxBytes: 50000000
+    #  messageTimeoutMs:
+    #  requestTimeoutMs:
+    #  deliveryTimeoutMs:
+    #  apiVersionRequestTimeoutMs:
 
 geodata:
   path: ""
@@ -166,12 +179,13 @@ sentry:
     service:
       annotations: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     # Mount and use custom CA
     # customCA:
     #   secretName: custom-ca
     #   item: ca.crt
-
+    # logLevel: "WARNING" # DEBUG|INFO|WARNING|ERROR|CRITICAL|FATAL
+    # logFormat: "human" # human|machine
     autoscaling:
       enabled: false
       minReplicas: 2
@@ -181,6 +195,7 @@ sentry:
     topologySpreadConstraints: []
     volumes: []
     volumeMounts: []
+    # workers: 3
 
   features:
     orgSubdomains: false
@@ -198,15 +213,17 @@ sentry:
 
   worker:
     enabled: true
-    replicas: 3
+    replicas: 1
     # concurrency: 4
     env: []
     resources: {}
     affinity: {}
     nodeSelector: {}
     # tolerations: []
-    # podLabels: []
-
+    # podLabels: {}
+    # logLevel: "WARNING" # DEBUG|INFO|WARNING|ERROR|CRITICAL|FATAL
+    # logFormat: "machine" # human|machine
+    # excludeQueues: ""
     # it's better to use prometheus adapter and scale based on
     # the size of the rabbitmq queue
     autoscaling:
@@ -215,7 +232,7 @@ sentry:
       maxReplicas: 5
       targetCPUUtilizationPercentage: 50
     livenessProbe:
-      enabled: false
+      enabled: true
       periodSeconds: 60
       timeoutSeconds: 10
       failureThreshold: 3
@@ -235,7 +252,7 @@ sentry:
     affinity: {}
     nodeSelector: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
 
     # it's better to use prometheus adapter and scale based on
     # the size of the rabbitmq queue
@@ -265,7 +282,7 @@ sentry:
     affinity: {}
     nodeSelector: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
 
     # it's better to use prometheus adapter and scale based on
     # the size of the rabbitmq queue
@@ -295,7 +312,7 @@ sentry:
     securityContext: {}
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     # maxBatchSize: ""
 
     # it's better to use prometheus adapter and scale based on
@@ -330,8 +347,11 @@ sentry:
     securityContext: {}
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     # maxBatchSize: ""
+    # logLevel: "info"
+    # inputBlockSize: ""
+    # maxBatchTimeMs: ""
 
     # it's better to use prometheus adapter and scale based on
     # the size of the rabbitmq queue
@@ -365,8 +385,11 @@ sentry:
     securityContext: {}
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     # maxBatchSize: ""
+    # logLevel: "info"
+    # inputBlockSize: ""
+    # maxBatchTimeMs: ""
 
     # it's better to use prometheus adapter and scale based on
     # the size of the rabbitmq queue
@@ -399,7 +422,7 @@ sentry:
     securityContext: {}
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
 
     # it's better to use prometheus adapter and scale based on
     # the size of the rabbitmq queue
@@ -429,7 +452,7 @@ sentry:
     securityContext: {}
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
 
     # it's better to use prometheus adapter and scale based on
     # the size of the rabbitmq queue
@@ -459,7 +482,7 @@ sentry:
     securityContext: {}
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
 
     # it's better to use prometheus adapter and scale based on
     # the size of the rabbitmq queue
@@ -490,7 +513,7 @@ sentry:
     securityContext: {}
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
 
     # it's better to use prometheus adapter and scale based on
     # the size of the rabbitmq queue
@@ -513,7 +536,6 @@ sentry:
   billingMetricsConsumer:
     enabled: true
     replicas: 1
-    # concurrency: 4
     env: []
     resources: {}
     affinity: {}
@@ -521,8 +543,7 @@ sentry:
     securityContext: {}
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
-    # maxBatchSize: ""
+    # podLabels: {}
 
     # it's better to use prometheus adapter and scale based on
     # the size of the rabbitmq queue
@@ -554,8 +575,9 @@ sentry:
     securityContext: {}
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
-    # maxBatchSize: ""
+    # podLabels: {}
+    # maxPollIntervalMs: ""
+    # logLevel: "info"
 
     # it's better to use prometheus adapter and scale based on
     # the size of the rabbitmq queue
@@ -587,8 +609,9 @@ sentry:
     securityContext: {}
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
-    # maxBatchSize: ""
+    # podLabels: {}
+    # logLevel: "info"
+    # maxPollIntervalMs: ""
 
     # it's better to use prometheus adapter and scale based on
     # the size of the rabbitmq queue
@@ -617,13 +640,13 @@ sentry:
     affinity: {}
     nodeSelector: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     sidecars: []
     topologySpreadConstraints: []
     volumes: []
     # volumeMounts: []
-    ## Log level can be any of: DEBUG, INFO, WARNING, ERROR, CRITICAL, FATAL
-    # logLevel: info
+    # logLevel: "WARNING" # DEBUG|INFO|WARNING|ERROR|CRITICAL|FATAL
+    # logFormat: "machine" # human|machine
 
   subscriptionConsumerEvents:
     enabled: true
@@ -635,7 +658,7 @@ sentry:
     securityContext: {}
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     sidecars: []
     topologySpreadConstraints: []
     volumes: []
@@ -655,7 +678,7 @@ sentry:
     securityContext: {}
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     sidecars: []
     topologySpreadConstraints: []
     volumes: []
@@ -672,7 +695,7 @@ sentry:
     securityContext: {}
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     sidecars: []
     topologySpreadConstraints: []
     volumes: []
@@ -694,7 +717,7 @@ sentry:
     securityContext: {}
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     sidecars: []
     topologySpreadConstraints: []
     volumes: []
@@ -715,7 +738,7 @@ sentry:
     securityContext: {}
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     sidecars: []
     topologySpreadConstraints: []
     volumes: []
@@ -735,7 +758,7 @@ sentry:
     securityContext: {}
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     sidecars: []
     topologySpreadConstraints: []
     volumes: []
@@ -748,6 +771,7 @@ sentry:
   subscriptionConsumerGenericMetrics:
     enabled: true
     replicas: 1
+    # concurrency: 1
     env: []
     resources: {}
     affinity: {}
@@ -755,7 +779,7 @@ sentry:
     securityContext: {}
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     sidecars: []
     topologySpreadConstraints: []
     volumes: []
@@ -768,6 +792,7 @@ sentry:
   subscriptionConsumerMetrics:
     enabled: true
     replicas: 1
+    # concurrency: 1
     env: []
     resources: {}
     affinity: {}
@@ -775,7 +800,7 @@ sentry:
     securityContext: {}
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     sidecars: []
     topologySpreadConstraints: []
     volumes: []
@@ -826,7 +851,7 @@ snuba:
     service:
       annotations: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
 
     autoscaling:
       enabled: false
@@ -849,7 +874,7 @@ snuba:
     topologySpreadConstraints: []
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     autoOffsetReset: "earliest"
     livenessProbe:
       enabled: true
@@ -860,7 +885,7 @@ snuba:
     # processes: ""
     # inputBlockSize: ""
     # outputBlockSize: ""
-    # maxBatchTimeMs: ""
+    maxBatchTimeMs: 750
     # queuedMaxMessagesKbytes: ""
     # queuedMinMessages: ""
 
@@ -883,7 +908,7 @@ snuba:
     topologySpreadConstraints: []
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     autoOffsetReset: "earliest"
     # noStrictOffsetReset: false
     maxBatchSize: "3"
@@ -917,7 +942,7 @@ snuba:
     topologySpreadConstraints: []
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     autoOffsetReset: "earliest"
     # noStrictOffsetReset: false
     maxBatchSize: "3"
@@ -928,7 +953,7 @@ snuba:
     # processes: ""
     # inputBlockSize: ""
     # outputBlockSize: ""
-    # maxBatchTimeMs: ""
+    maxBatchTimeMs: 750
     # queuedMaxMessagesKbytes: ""
     # queuedMinMessages: ""
 
@@ -951,7 +976,7 @@ snuba:
     topologySpreadConstraints: []
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     autoOffsetReset: "earliest"
     # maxBatchTimeMs: ""
     # queuedMaxMessagesKbytes: ""
@@ -970,7 +995,7 @@ snuba:
     topologySpreadConstraints: []
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     autoOffsetReset: "earliest"
     livenessProbe:
       enabled: true
@@ -978,6 +1003,14 @@ snuba:
       periodSeconds: 320
     # volumes: []
     # volumeMounts: []
+    # maxBatchSize: ""
+    # processes: ""
+    # inputBlockSize: ""
+    # outputBlockSize: ""
+    maxBatchTimeMs: 750
+    # queuedMaxMessagesKbytes: ""
+    # queuedMinMessages: ""
+    # noStrictOffsetReset: false
 
   subscriptionConsumerEvents:
     enabled: true
@@ -990,7 +1023,7 @@ snuba:
     topologySpreadConstraints: []
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     autoOffsetReset: "earliest"
     livenessProbe:
       enabled: true
@@ -1010,7 +1043,7 @@ snuba:
     topologySpreadConstraints: []
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     autoOffsetReset: "earliest"
     livenessProbe:
       enabled: true
@@ -1018,6 +1051,14 @@ snuba:
       periodSeconds: 320
     # volumes: []
     # volumeMounts: []
+    # maxBatchSize: ""
+    # processes: ""
+    # inputBlockSize: ""
+    # outputBlockSize: ""
+    maxBatchTimeMs: 750
+    # queuedMaxMessagesKbytes: ""
+    # queuedMinMessages: ""
+    # noStrictOffsetReset: false
 
   genericMetricsDistributionConsumer:
     enabled: true
@@ -1030,7 +1071,7 @@ snuba:
     topologySpreadConstraints: []
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     autoOffsetReset: "earliest"
     livenessProbe:
       enabled: true
@@ -1038,6 +1079,14 @@ snuba:
       periodSeconds: 320
     # volumes: []
     # volumeMounts: []
+    # maxBatchSize: ""
+    # processes: ""
+    # inputBlockSize: ""
+    # outputBlockSize: ""
+    maxBatchTimeMs: 750
+    # queuedMaxMessagesKbytes: ""
+    # queuedMinMessages: ""
+    # noStrictOffsetReset: false
 
   genericMetricsSetsConsumer:
     enabled: true
@@ -1050,7 +1099,7 @@ snuba:
     topologySpreadConstraints: []
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     autoOffsetReset: "earliest"
     livenessProbe:
       enabled: true
@@ -1058,6 +1107,14 @@ snuba:
       periodSeconds: 320
     # volumes: []
     # volumeMounts: []
+    # maxBatchSize: ""
+    # processes: ""
+    # inputBlockSize: ""
+    # outputBlockSize: ""
+    maxBatchTimeMs: 750
+    # queuedMaxMessagesKbytes: ""
+    # queuedMinMessages: ""
+    # noStrictOffsetReset: false
 
   subscriptionConsumerMetrics:
     enabled: true
@@ -1070,7 +1127,7 @@ snuba:
     topologySpreadConstraints: []
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     autoOffsetReset: "earliest"
     livenessProbe:
       enabled: true
@@ -1090,7 +1147,7 @@ snuba:
     topologySpreadConstraints: []
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     autoOffsetReset: "earliest"
     # volumes: []
     # volumeMounts: []
@@ -1109,7 +1166,7 @@ snuba:
     topologySpreadConstraints: []
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     # commitBatchSize: 1
     autoOffsetReset: "earliest"
     sidecars: []
@@ -1128,20 +1185,20 @@ snuba:
     topologySpreadConstraints: []
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     autoOffsetReset: "earliest"
     livenessProbe:
       enabled: true
       initialDelaySeconds: 5
       periodSeconds: 320
-    # noStrictOffsetReset: false
     # maxBatchSize: ""
     # processes: ""
     # inputBlockSize: ""
     # outputBlockSize: ""
-    # maxBatchTimeMs: ""
+    maxBatchTimeMs: 750
     # queuedMaxMessagesKbytes: ""
     # queuedMinMessages: ""
+    # noStrictOffsetReset: false
 
     # volumeMounts:
     #   - mountPath: /dev/shm
@@ -1161,7 +1218,7 @@ snuba:
     topologySpreadConstraints: []
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     autoOffsetReset: "earliest"
     # noStrictOffsetReset: false
     # maxBatchSize: ""
@@ -1191,20 +1248,21 @@ snuba:
     topologySpreadConstraints: []
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     autoOffsetReset: "earliest"
     livenessProbe:
       enabled: true
       initialDelaySeconds: 5
       periodSeconds: 320
-    # noStrictOffsetReset: false
     # maxBatchSize: ""
     # processes: ""
     # inputBlockSize: ""
     # outputBlockSize: ""
-    # maxBatchTimeMs: ""
+    maxBatchTimeMs: 750
     # queuedMaxMessagesKbytes: ""
     # queuedMinMessages: ""
+    # noStrictOffsetReset: false
+
 
     # volumeMounts:
     #   - mountPath: /dev/shm
@@ -1224,20 +1282,20 @@ snuba:
     topologySpreadConstraints: []
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     autoOffsetReset: "earliest"
     livenessProbe:
       enabled: true
       initialDelaySeconds: 5
       periodSeconds: 320
-    # noStrictOffsetReset: false
     # maxBatchSize: ""
     # processes: ""
     # inputBlockSize: ""
     # outputBlockSize: ""
-    # maxBatchTimeMs: ""
+    maxBatchTimeMs: 750
     # queuedMaxMessagesKbytes: ""
     # queuedMinMessages: ""
+    # noStrictOffsetReset: false
 
     # volumeMounts:
     #   - mountPath: /dev/shm
@@ -1257,20 +1315,20 @@ snuba:
     topologySpreadConstraints: []
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     autoOffsetReset: "earliest"
     livenessProbe:
       enabled: true
       initialDelaySeconds: 5
       periodSeconds: 320
-    # noStrictOffsetReset: false
     # maxBatchSize: ""
     # processes: ""
     # inputBlockSize: ""
     # outputBlockSize: ""
-    # maxBatchTimeMs: ""
+    maxBatchTimeMs: 750
     # queuedMaxMessagesKbytes: ""
     # queuedMinMessages: ""
+    # noStrictOffsetReset: false
 
     # volumeMounts:
     #   - mountPath: /dev/shm
@@ -1290,20 +1348,20 @@ snuba:
     topologySpreadConstraints: []
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     autoOffsetReset: "earliest"
     livenessProbe:
       enabled: true
       initialDelaySeconds: 5
       periodSeconds: 320
-    # noStrictOffsetReset: false
     # maxBatchSize: ""
     # processes: ""
     # inputBlockSize: ""
     # outputBlockSize: ""
-    # maxBatchTimeMs: ""
+    maxBatchTimeMs: 750
     # queuedMaxMessagesKbytes: ""
     # queuedMinMessages: ""
+    # noStrictOffsetReset: false
 
     # volumeMounts:
     #   - mountPath: /dev/shm
@@ -1324,20 +1382,20 @@ snuba:
     topologySpreadConstraints: []
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     autoOffsetReset: "earliest"
     livenessProbe:
       enabled: true
       initialDelaySeconds: 5
       periodSeconds: 320
-    # noStrictOffsetReset: false
     # maxBatchSize: ""
     # processes: ""
     # inputBlockSize: ""
     # outputBlockSize: ""
-    # maxBatchTimeMs: ""
+    maxBatchTimeMs: 750
     # queuedMaxMessagesKbytes: ""
     # queuedMinMessages: ""
+    # noStrictOffsetReset: false
 
     # volumeMounts:
     #   - mountPath: /dev/shm
@@ -1358,20 +1416,20 @@ snuba:
     topologySpreadConstraints: []
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     autoOffsetReset: "earliest"
     livenessProbe:
       enabled: true
       initialDelaySeconds: 5
       periodSeconds: 320
-    # noStrictOffsetReset: false
     # maxBatchSize: ""
     # processes: ""
     # inputBlockSize: ""
     # outputBlockSize: ""
-    # maxBatchTimeMs: ""
+    maxBatchTimeMs: 750
     # queuedMaxMessagesKbytes: ""
     # queuedMinMessages: ""
+    # noStrictOffsetReset: false
 
     # volumeMounts:
     #   - mountPath: /dev/shm
@@ -1396,7 +1454,7 @@ hooks:
   enabled: true
   preUpgrade: false
   removeOnSuccess: true
-  activeDeadlineSeconds: 100
+  activeDeadlineSeconds: 600
   shareProcessNamespace: false
   dbCheck:
     enabled: true
@@ -1406,7 +1464,7 @@ hooks:
       # pullPolicy: IfNotPresent
       imagePullSecrets: []
     env: []
-    # podLabels: []
+    # podLabels: {}
     podAnnotations: {}
     resources:
       limits:
@@ -1424,7 +1482,7 @@ hooks:
   dbInit:
     enabled: true
     env: []
-    # podLabels: []
+    # podLabels: {}
     podAnnotations: {}
     resources:
       limits:
@@ -1446,7 +1504,7 @@ hooks:
     # Note that when you set `kafka.enabled` to `false`, snuba component might fail to start if newly added topics are not created by `kafka.provisioning`.
     kafka:
       enabled: true
-    # podLabels: []
+    # podLabels: {}
     podAnnotations: {}
     resources:
       limits:
@@ -1462,7 +1520,7 @@ hooks:
     # volumeMounts: []
   snubaMigrate:
     enabled: true
-    # podLabels: []
+    # podLabels: {}
     # volumes: []
     # volumeMounts: []
 
@@ -1492,6 +1550,12 @@ mail:
 symbolicator:
   enabled: false
   api:
+    usedeployment: true  # Set true to use Deployment, false for StatefulSet
+    persistence:
+      enabled: true  # Set true for using PersistentVolumeClaim, false for emptyDir
+      accessModes: ["ReadWriteOnce"]
+      # storageClassName: standard
+      size: "10Gi"
     replicas: 1
     env: []
     probeInitialDelaySeconds: 10
@@ -1502,7 +1566,7 @@ symbolicator:
     topologySpreadConstraints: []
     containerSecurityContext: {}
     # tolerations: []
-    # podLabels: []
+    # podLabels: {}
     # priorityClassName: "xxx"
     config: |-
       # See: https://getsentry.github.io/symbolicator/#configuration
@@ -1540,7 +1604,7 @@ symbolicator:
   # TODO The cleanup cronjob is not yet implemented
   cleanup:
     enabled: false
-    # podLabels: []
+    # podLabels: {}
     # affinity: {}
     # env: []
 
@@ -1620,6 +1684,14 @@ nginx:
     ports:
       http: 80
   extraLocationSnippet: false
+  customReadinessProbe:
+    tcpSocket:
+      port: http
+    initialDelaySeconds: 5
+    timeoutSeconds: 3
+    periodSeconds: 5
+    successThreshold: 1
+    failureThreshold: 3
   # extraLocationSnippet: |
   #  location /admin {
   #    allow 1.2.3.4; # VPN network
@@ -1630,13 +1702,16 @@ nginx:
   # serviceAccount:
   #   create: false
   #   name: nginx
+  metrics:
+    serviceMonitor: {}
 
 ingress:
-  enabled: false
+  enabled: true
   # If you are using traefik ingress controller, switch this to 'traefik'
   # if you are using AWS ALB Ingress controller, switch this to 'aws-alb'
   # if you are using GKE Ingress controller, switch this to 'gke'
   regexPathStyle: nginx
+  # ingressClassName: nginx
   # If you are using AWS ALB Ingress controller, switch to true if you want activate the http to https redirection.
   alb:
     httpRedirect: false
@@ -1644,6 +1719,9 @@ ingress:
   #   If you are using nginx ingress controller, please use at least those 2 annotations
   #   kubernetes.io/ingress.class: nginx
   #   nginx.ingress.kubernetes.io/use-regex: "true"
+  #   https://github.com/getsentry/self-hosted/issues/1927
+  #   nginx.ingress.kubernetes.io/proxy-buffers-number: "16"
+  #   nginx.ingress.kubernetes.io/proxy-buffer-size: "32k"
   #
   # hostname:
   # additionalHostNames: []
@@ -1729,6 +1807,7 @@ config:
 clickhouse:
   enabled: true
   clickhouse:
+    replicas: "1"
     imageVersion: "21.8.13.6"
     configmap:
       remote_servers:
@@ -1795,7 +1874,7 @@ externalClickhouse:
 zookeeper:
   enabled: true
   nameOverride: zookeeper-clickhouse
-  replicaCount: 3
+  replicaCount: 1
 
 # Settings for Kafka.
 # See https://github.com/bitnami/charts/tree/master/bitnami/kafka
@@ -1919,6 +1998,8 @@ kafka:
     enabled: false
   kraft:
     enabled: true
+  controller:
+    replicaCount: 3
 
   ## Use this to enable an extra service account
   # serviceAccount:
@@ -1944,6 +2025,8 @@ sourcemaps:
 
 redis:
   enabled: true
+  replica:
+    replicaCount: 1
   auth:
     enabled: false
     sentinel: false
@@ -1989,16 +2072,16 @@ postgresql:
 
 ## This value is only used when postgresql.enabled is set to false
 ## Set either externalPostgresql.password or externalPostgresql.existingSecret to configure password
-## externalPostgresql.existingSecret should have a key of 'postgresql-password' which holds the password
 externalPostgresql:
   # host: postgres
   port: 5432
   username: postgres
   # password: postgres
   # existingSecret: secret-name
-  ## set existingSecretKeys in a secret, if not specified, value from the secret won't be used
+  # set existingSecretKeys in a secret, if not specified, value from the secret won't be used
+  # if externalPostgresql.existingSecret is used, externalPostgresql.existingSecretKeys.password must be specified.
   existingSecretKeys: {}
-  #   password: password
+  #   password: postgresql-password # Required if existingSecret is used. Key in existingSecret.
   #   username: username
   #   database: database
   #   port: port
@@ -2016,7 +2099,7 @@ rabbitmq:
   clustering:
     forceBoot: true
     rebalance: true
-  replicaCount: 3
+  replicaCount: 1
   auth:
     erlangCookie: pHgpy3Q6adTskzAT6bLHCFqFTF7lMxhA
     username: guest
@@ -2132,7 +2215,7 @@ metrics:
   containerSecurityContext: {}
   # schedulerName:
   # Optional extra labels for pod, i.e. redis-client: "true"
-  # podLabels: []
+  # podLabels: {}
   service:
     type: ClusterIP
     labels: {}
@@ -2154,6 +2237,8 @@ metrics:
     #   any: true
     scrapeInterval: 30s
     # honorLabels: true
+    relabelings: []
+    metricRelabelings: []
 
 revisionHistoryLimit: 10
 

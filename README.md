@@ -8,11 +8,19 @@ Big thanks to the maintainers of the [deprecated chart](https://github.com/helm/
 
 ## How this chart works
 
-`helm repo add sentry https://sentry-kubernetes.github.io/charts`
+```
+helm repo add sentry https://sentry-kubernetes.github.io/charts
+helm repo update
+helm install my-sentry sentry/sentry --wait --timeout=1000s
+```
 
 ## Values
 
 For now the full list of values is not documented but you can get inspired by the values.yaml specific to each directory.
+
+## Upgrading from 23.x.x Version of This Chart to 24.x.x/25.x.x
+
+Make sure to revert the changes on Clickhouse replica counts if the change doesn't suit you.
 
 ## Upgrading from 22.x.x Version of This Chart to 23.x.x
 
@@ -100,7 +108,7 @@ mode. This change requires action on your part to ensure a smooth upgrade.
 7. **(Optional)** If you would like to switch to a non-dedicated cluster, set **'controller.controllerOnly=false'**. This will cause controller-only nodes to switch to controller+broker nodes.
 
     At this point, you could manually decommission broker-only nodes by reassigning its partitions to controller-eligible nodes.
-    
+
     For more information about decommissioning a Kafka broker, check the official documentation.
 
 ## Upgrading from 20.x.x version of this Chart to 21.x.x
@@ -131,7 +139,7 @@ kafka:
 
 ## Upgrading from 18.x.x version of this Chart to 19.x.x
 
-Chart dependencies has been upgraded because of sentry requirements. 
+Chart dependencies has been upgraded because of sentry requirements.
 Changes:
 - The minimum required version of Postgresql is 14.5 (works with 15.x too)
 
@@ -141,7 +149,7 @@ Bumped dependencies:
 
 ## Upgrading from 17.x.x version of this Chart to 18.x.x
 
-If Kafka is complaining about unknown or missing topic, please connect to kafka-0 and run 
+If Kafka is complaining about unknown or missing topic, please connect to kafka-0 and run
 
 `/opt/bitnami/kafka/bin/kafka-topics.sh --create --topic ingest-replay-recordings --bootstrap-server localhost:9092`
 
@@ -150,7 +158,7 @@ If Kafka is complaining about unknown or missing topic, please connect to kafka-
 
 Sentry version from 22.10.0 onwards should be using chart 17.x.x
 
-- post process forwarder events and transactions topics are splitted in Sentry 22.10.0
+- post process forwarder events and transactions topics are split in Sentry 22.10.0
 
 You can delete the deployment "sentry-post-process-forward" as it's no longer needed.
 
@@ -167,7 +175,7 @@ See https://github.com/sentry-kubernetes/charts/tree/develop/sentry#sentry-secre
 
 ## Upgrading from 14.x.x version of this Chart to 15.x.x
 
-Chart dependencies has been upgraded because of bitnami charts removal. 
+Chart dependencies has been upgraded because of bitnami charts removal.
 Changes:
 - `nginx.service.port: 80` > `nginx.service.ports.http: 80`
 - `kafka.service.port` > `kafka.service.ports.client`
@@ -246,7 +254,7 @@ clickhouse.clickhouse.configmap.remote_servers.replica.backup
 
 ## Upgrading from 4.x.x version of this Chart to 5.0.0
 
-As Relay is now part of this chart your need to make sure you enable either Nginx or the Ingress. Please read the next paragraph for more informations.
+As Relay is now part of this chart your need to make sure you enable either Nginx or the Ingress. Please read the next paragraph for more information.
 
 If you are using an ingress gateway (like istio), you have to change your inbound path from sentry-web to nginx.
 
