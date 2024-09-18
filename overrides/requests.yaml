@@ -2,7 +2,9 @@ kafka:
   controller:
     resources:
       requests:
-        memory: 3Gi
+        memory: 1536Mi
+      limits:
+        memory: 2Gi
     persistence:
       size: 16Gi
 
@@ -11,6 +13,8 @@ clickhouse:
     resources:
       requests:
         memory: 1536Mi # 1.5Gi
+      limits:
+        memory: 2Gi
     persistentVolumeClaim:
       dataPersistentVolume:
         storage: 32Gi
@@ -18,12 +22,30 @@ clickhouse:
 postgresql:
   resources:
     requests:
-      memory: 6Gi
+      memory: 3Gi
+    limits:
+      memory: 3Gi
+
+redis:
+  master:
+    resources:
+      requests:
+        memory: 1Gi
+      limits:
+        memory: 2Gi
+  replica:
+    resources:
+      requests:
+        memory: 1Gi
+      limits:
+        memory: 2Gi
 
 relay:
   resources:
     requests:
-      memory: 2Gi
+      memory: 3584Mi # 3.5Gi
+    limits:
+      memory: 5Gi
 
 sentry:
   ingestConsumer:
