@@ -6,6 +6,9 @@ hooks:
     - name: SENTRY_METRICS_PREFIX
       value: sentry-pre
 
+ingress:
+  enabled: false
+
 nginx:
   fullnameOverride: sentry-pre
   existingServerBlockConfigmap: sentry-pre-nginx
