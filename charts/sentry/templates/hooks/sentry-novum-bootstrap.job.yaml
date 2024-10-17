@@ -95,6 +95,15 @@ spec:
         {{- if .Values.hooks.novumBootstrap.env }}
 {{ toYaml .Values.hooks.novumBootstrap.env | indent 8 }}
         {{- end }}
+        - name: SENTRY_API_TOKEN_SOURCEMAPS
+        {{- if and .Values.hooks.novumBootstrap.sentryApiTokens .Values.hooks.novumBootstrap.sentryApiTokens.sourcemaps }}
+          value: {{ .Values.hooks.novumBootstrap.sentryApiTokens.sourcemaps | quote }}
+        {{- else }}
+          valueFrom:
+            secretKeyRef:
+              name: sentry-api-tokens
+              key: sourcemaps
+        {{- end }}
         volumeMounts:
         - mountPath: {{ .Values.filestore.filesystem.path }}
           name: sentry-data

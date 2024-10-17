@@ -1,10 +1,14 @@
 # Specific overrides for sentry-pre in tooling-pre namespace
+ingress:
+  enabled: false
 
 hooks:
   novumBootstrap:
     env:
     - name: SENTRY_METRICS_PREFIX
       value: sentry-pre
+    sentryApiTokens:
+      sourcemaps: "TestApiTokenSourcemaps"
 
 ingress:
   enabled: false
@@ -25,13 +29,13 @@ config:
     # This is used to generate the DSN. When an internal error is triggered it will also use this endpoint
     # Make sure to match the service name
     SENTRY_ENDPOINT = "http://sentry-pre.tooling-pre"
-    
+
     ##################
     # StatsD Metrics #
     ##################
 
     SENTRY_METRICS_PREFIX = "platform.metrics.tooling-prd.tooling-pre.sentry_pre_internal."
-    
+
     SENTRY_METRICS_BACKEND = "sentry.metrics.statsd.StatsdMetricsBackend"
     SENTRY_METRICS_OPTIONS = {
         "host": os.getenv("SENTRY_STATSITE_PROXY", "statsite-proxy.common"),

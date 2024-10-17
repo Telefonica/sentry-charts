@@ -3,7 +3,7 @@ name: sentry
 description: A Helm chart for Kubernetes
 type: application
 # IMPORTANT: Remember to update images.sentry.tag in values.yaml to match appVersion
-version: 25.9.0-novum1
+version: 25.9.0-novum2
 appVersion: 24.7.1
 dependencies:
   - name: memcached
