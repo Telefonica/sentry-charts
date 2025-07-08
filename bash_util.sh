@@ -32,7 +32,7 @@ function find_and_validate_external_repositories() {
   DEFAULT_TF_MODULE_KUBENOVUM="$SCRIPT_DIR/../tf-module-kubenovum"
   FILE_TO_CHECK_TF_MODULE_KUBENOVUM="k8s-setup/chart-sentry.tf"
   DEFAULT_TEF_IAAC="$SCRIPT_DIR/../tef-iaac"
-  FILE_TO_CHECK_TEF_IAAC="environments/azure/northeurope09/prd.tooling/blue-k8s-infra/chart-values-override/sentry.yaml"
+  FILE_TO_CHECK_TEF_IAAC="environments/azure/northeurope04/dev.global/blue-k8s-infra/chart-values-override/sentry.yaml"
 
   TF_MODULE_KUBENOVUM="${TF_MODULE_KUBENOVUM:-$DEFAULT_TF_MODULE_KUBENOVUM}"
   if ! is_valid_repo "$TF_MODULE_KUBENOVUM" "$FILE_TO_CHECK_TF_MODULE_KUBENOVUM"; then

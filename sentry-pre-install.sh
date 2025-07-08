@@ -82,4 +82,4 @@ fi
 kubeswitch tooling/pre
 helm_dependency_check "charts/sentry"
 
-HELM_DRIVER=configmap helm -n $NAMESPACE $HELM_ACTION sentry-pre charts/sentry "${HELM_UPGRADE_OPTIONS[@]}" --timeout 10m $DRY_RUN_OPTION $DEBUG_OPTION -f "$TF_MODULE_KUBENOVUM/k8s-setup/chart-values/sentry.yaml" -f overrides/serviceaccount.yaml -f overrides/images.yaml -f overrides/sentry-pre-tooling-pre.yaml -f "$TEF_IAAC/environments/azure/northeurope09/prd.tooling/blue-k8s-infra/chart-values-override/sentry.yaml" -f overrides/requests.yaml
+HELM_DRIVER=configmap helm -n $NAMESPACE $HELM_ACTION sentry-pre charts/sentry "${HELM_UPGRADE_OPTIONS[@]}" --timeout 10m $DRY_RUN_OPTION $DEBUG_OPTION -f "$TF_MODULE_KUBENOVUM/k8s-setup/chart-values/sentry.yaml" -f overrides/serviceaccount.yaml -f overrides/images.yaml -f overrides/sentry-pre-tooling-pre.yaml -f "$TEF_IAAC/environments/azure/northeurope04/dev.global/blue-k8s-infra/chart-values-override/sentry.yaml" -f overrides/requests.yaml
