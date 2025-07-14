@@ -6,11 +6,11 @@ cd "$SCRIPT_DIR"
 
 source ./bash_util.sh
 
-NAMESPACE=tooling-pre
+NAMESPACE=common
 
 function usage() {
   echo "Usage: $(basename "$0") [-h][-u][-y][-d][-r]"
-  echo "Install sentry-pre in $NAMESPACE"
+  echo "Install sentry-dev in $NAMESPACE"
   echo ""
   echo "  -h         Show this help"
   echo "  -u         Do an upgrade instead of an install"
@@ -79,7 +79,7 @@ if [[ "$ASK_CONFIRMATION" == "yes" && -z "$DRY_RUN_OPTION" ]]; then
   fi
 fi
 
-kubeswitch tooling/pre
+kubeswitch common/dev
 helm_dependency_check "charts/sentry"
 
-HELM_DRIVER=configmap helm -n $NAMESPACE $HELM_ACTION sentry-pre charts/sentry "${HELM_UPGRADE_OPTIONS[@]}" --timeout 10m $DRY_RUN_OPTION $DEBUG_OPTION -f "$TF_MODULE_KUBENOVUM/k8s-setup/chart-values/sentry.yaml" -f overrides/serviceaccount.yaml -f overrides/images.yaml -f overrides/sentry-pre-tooling-pre.yaml -f "$TEF_IAAC/environments/azure/northeurope04/dev.global/blue-k8s-infra/chart-values-override/sentry.yaml" -f overrides/requests.yaml
+helm -n $NAMESPACE $HELM_ACTION sentry charts/sentry "${HELM_UPGRADE_OPTIONS[@]}" --timeout 10m $DRY_RUN_OPTION $DEBUG_OPTION -f "$TF_MODULE_KUBENOVUM/k8s-setup/chart-values/sentry.yaml" -f overrides/images.yaml -f overrides/sentry-dev.yaml -f "$TEF_IAAC/environments/azure/northeurope04/dev.global/blue-k8s-infra/chart-values-override/sentry.yaml" -f overrides/requests.yaml

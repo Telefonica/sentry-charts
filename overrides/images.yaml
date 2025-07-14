@@ -1,4 +1,4 @@
-# Replace the registry for the container images to the tooling registry
+# Replace the registry for the container images to the dev registry
 # If you need to make any change to this file remember to mimic the change in
 # the Docker images section in https://github.com/Telefonica/tf-module-kubenovum/blob/master/k8s-setup/chart-sentry.tf
 
@@ -6,61 +6,61 @@ clickhouse:
   clickhouse:
     metrics:
       image:
-        registry: dockerprx.mgm.prd.tooling.northeurope09.novumproject.com
-    image: dockerprx.mgm.prd.tooling.northeurope09.novumproject.com/yandex/clickhouse-server
+        registry: dockerprx.k8s.northeurope04.novumproject.com
+    image: dockerprx.k8s.northeurope04.novumproject.com/yandex/clickhouse-server
     init:
-      image: dockerprx.mgm.prd.tooling.northeurope09.novumproject.com/busybox
+      image: dockerprx.k8s.northeurope04.novumproject.com/busybox
 
 nginx:
   image:
-    registry: dockerprx.mgm.prd.tooling.northeurope09.novumproject.com
+    registry: dockerprx.k8s.northeurope04.novumproject.com
 kafka:
   metrics:
     kafka:
       image:
-        registry: dockerprx.mgm.prd.tooling.northeurope09.novumproject.com
+        registry: dockerprx.k8s.northeurope04.novumproject.com
   image:
-    registry: dockerprx.mgm.prd.tooling.northeurope09.novumproject.com
+    registry: dockerprx.k8s.northeurope04.novumproject.com
   zookeeper:
     image:
-      registry: dockerprx.mgm.prd.tooling.northeurope09.novumproject.com
+      registry: dockerprx.k8s.northeurope04.novumproject.com
 postgresql:
   metrics:
     image:
-      registry: dockerprx.mgm.prd.tooling.northeurope09.novumproject.com
+      registry: dockerprx.k8s.northeurope04.novumproject.com
   image:
-    registry: dockerprx.mgm.prd.tooling.northeurope09.novumproject.com
+    registry: dockerprx.k8s.northeurope04.novumproject.com
 
 redis:
   metrics:
     image:
-      registry: dockerprx.mgm.prd.tooling.northeurope09.novumproject.com
+      registry: dockerprx.k8s.northeurope04.novumproject.com
   image:
-    registry: dockerprx.mgm.prd.tooling.northeurope09.novumproject.com
+    registry: dockerprx.k8s.northeurope04.novumproject.com
 
 zookeeper:
   image:
-    registry: dockerprx.mgm.prd.tooling.northeurope09.novumproject.com
+    registry: dockerprx.k8s.northeurope04.novumproject.com
 
 memcached:
   metrics:
     image:
-      registry: dockerprx.mgm.prd.tooling.northeurope09.novumproject.com
+      registry: dockerprx.k8s.northeurope04.novumproject.com
   image:
-    registry: dockerprx.mgm.prd.tooling.northeurope09.novumproject.com
+    registry: dockerprx.k8s.northeurope04.novumproject.com
 
 images:
   sentry:
-    repository: dockerprx.mgm.prd.tooling.northeurope09.novumproject.com/getsentry/sentry
+    repository: dockerprx.k8s.northeurope04.novumproject.com/getsentry/sentry
 
   snuba:
-    repository: dockerprx.mgm.prd.tooling.northeurope09.novumproject.com/getsentry/snuba
+    repository: dockerprx.k8s.northeurope04.novumproject.com/getsentry/snuba
   relay:
-    repository: dockerprx.mgm.prd.tooling.northeurope09.novumproject.com/getsentry/relay
+    repository: dockerprx.k8s.northeurope04.novumproject.com/getsentry/relay
   symbolicator:
-    repository: dockerprx.mgm.prd.tooling.northeurope09.novumproject.com/getsentry/symbolicator
+    repository: dockerprx.k8s.northeurope04.novumproject.com/getsentry/symbolicator
 
 hooks:
   dbCheck:
     image:
-      repository: dockerprx.mgm.prd.tooling.northeurope09.novumproject.com/subfuzion/netcat
+      repository: dockerprx.k8s.northeurope04.novumproject.com/subfuzion/netcat

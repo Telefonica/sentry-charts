@@ -5,47 +5,14 @@ kafka:
         memory: 1536Mi
       limits:
         memory: 2Gi
-    persistence:
-      size: 16Gi
 
 clickhouse:
   clickhouse:
     resources:
       requests:
-        memory: 1536Mi # 1.5Gi
-      limits:
         memory: 2Gi
-    persistentVolumeClaim:
-      dataPersistentVolume:
-        storage: 32Gi
-
-postgresql:
-  resources:
-    requests:
-      memory: 3Gi
-    limits:
-      memory: 3Gi
-
-redis:
-  master:
-    resources:
-      requests:
-        memory: 1Gi
       limits:
-        memory: 2Gi
-  replica:
-    resources:
-      requests:
-        memory: 1Gi
-      limits:
-        memory: 2Gi
-
-relay:
-  resources:
-    requests:
-      memory: 3584Mi # 3.5Gi
-    limits:
-      memory: 5Gi
+        memory: 4Gi
 
 sentry:
   ingestConsumer:
@@ -57,17 +24,16 @@ sentry:
   worker:
     resources:
       requests:
-        memory: 1792Mi
+        memory: 1536Mi
 
 snuba:
   api:
     resources:
       requests:
-        memory: 3Gi
+        memory: 2Gi
 
 
 zookeeper:
   resources:
     requests:
       memory: 1Gi
-

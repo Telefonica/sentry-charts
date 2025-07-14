@@ -8,7 +8,7 @@ source ./bash_util.sh
 
 function usage() {
   echo "Usage: $(basename "$0") [-h][-a][-k PATH][-t PATH]"
-  echo "List container images from sentry-pre chart from external registries"
+  echo "List container images from sentry-dev chart from external registries"
   echo ""
   echo "  -h         Show this help"
   echo "  -a         List all images, not only the external ones"
@@ -51,9 +51,9 @@ shift $((OPTIND-1))
 
 find_and_validate_external_repositories
 
-FILTER="grep -v dockerprx.prd.tooling.northeurope09.novumproject.com"
+FILTER="grep -v dockerprx.k8s.northeurope04.novumproject.com"
 if [[ "$LIST_ALL" == "yes" ]]; then
   FILTER="cat"
 fi
 
-./sentry-pre-template.sh "${OPTION_TEF_IAAC[@]}" "${OPTION_TF_MODULE_KUBENOVUM[@]}" 2>/dev/null | grep -o '^\s*image:.*' | sed -e 's/^\s*image:\s*//' -e 's/^"//' -e 's/"$//' | sort | $FILTER
+./sentry-dev-template.sh "${OPTION_TEF_IAAC[@]}" "${OPTION_TF_MODULE_KUBENOVUM[@]}" 2>/dev/null | grep -o '^\s*image:.*' | sed -e 's/^\s*image:\s*//' -e 's/^"//' -e 's/"$//' | sort | $FILTER
