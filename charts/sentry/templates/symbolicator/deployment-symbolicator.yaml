@@ -41,10 +41,16 @@ spec:
       {{- if .Values.symbolicator.api.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.symbolicator.api.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.symbolicator.api.tolerations }}
       tolerations:
 {{ toYaml .Values.symbolicator.api.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.symbolicator.api.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -119,6 +125,45 @@ spec:
         securityContext:
 {{ toYaml .Values.symbolicator.api.containerSecurityContext | indent 12 }}
 {{- end }}
+{{- if .Values.symbolicator.api.cleaner.enabled }}
+      - name: {{ .Chart.Name }}-symbolicator-cleaner
+        image: "{{ template "symbolicator.image" . }}"
+        imagePullPolicy: {{ default "IfNotPresent" .Values.images.symbolicator.pullPolicy }}
+        command:
+          - /bin/sh
+          - -c
+        args:
+          - |
+            while true; do
+              symbolicator cleanup -c /etc/symbolicator/config.yml;
+              sleep {{ .Values.symbolicator.api.cleaner.sleepInterval }};
+            done
+        env:
+        {{ if and (eq .Values.filestore.backend "gcs") .Values.filestore.gcs.secretName }}
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/run/secrets/google/{{ .Values.filestore.gcs.credentialsFile }}
+        {{ end }}
+        volumeMounts:
+        - mountPath: /etc/symbolicator
+          name: config
+          readOnly: true
+        - mountPath: /data
+          name: symbolicator-data
+        {{- if and (eq .Values.filestore.backend "gcs") .Values.filestore.gcs.secretName }}
+        - name: sentry-google-cloud-key
+          mountPath: /var/run/secrets/google
+        {{ end }}
+{{- if .Values.symbolicator.api.cleaner.containerSecurityContext }}
+        securityContext:
+{{ toYaml .Values.symbolicator.api.cleaner.containerSecurityContext | indent 12 }}
+{{- end }}
+{{- end }}
+{{- if .Values.symbolicator.api.sidecars }}
+{{ toYaml .Values.symbolicator.api.sidecars | indent 6 }}
+{{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-symbolicator-api
       {{- end }}
@@ -135,6 +180,9 @@ spec:
       {{ end }}
 {{- if .Values.symbolicator.api.volumes }}
 {{ toYaml .Values.symbolicator.api.volumes | indent 6 }}
+{{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 6 }}
 {{- end }}
       {{- if .Values.symbolicator.api.priorityClassName }}
       priorityClassName: "{{ .Values.symbolicator.api.priorityClassName }}"

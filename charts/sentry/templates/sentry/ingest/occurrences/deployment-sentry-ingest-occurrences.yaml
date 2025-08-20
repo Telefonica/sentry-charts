@@ -1,3 +1,4 @@
+{{- if has "feature-complete" .Values.profiles }}
 {{- if .Values.sentry.ingestOccurrences.enabled }}
 apiVersion: apps/v1
 kind: Deployment
@@ -51,10 +52,16 @@ spec:
       {{- if .Values.sentry.ingestOccurrences.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.sentry.ingestOccurrences.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.ingestOccurrences.tolerations }}
       tolerations:
 {{ toYaml .Values.sentry.ingestOccurrences.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.ingestOccurrences.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -86,6 +93,13 @@ spec:
           - "ingest-occurrences"
           - "--consumer-group"
           - "ingest-occurrences"
+          {{- if .Values.sentry.ingestOccurrences.autoOffsetReset }}
+          - "--auto-offset-reset"
+          - "{{ .Values.sentry.ingestOccurrences.autoOffsetReset }}"
+          {{- end }}
+          {{- if .Values.sentry.ingestOccurrences.noStrictOffsetReset }}
+          - "--no-strict-offset-reset"
+          {{- end }}
           {{- if .Values.sentry.ingestOccurrences.livenessProbe.enabled }}
           - "--healthcheck-file-path"
           - "/tmp/health.txt"
@@ -128,6 +142,9 @@ spec:
 {{- if .Values.sentry.ingestOccurrences.sidecars }}
 {{ toYaml .Values.sentry.ingestOccurrences.sidecars | indent 6 }}
 {{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-ingest-occurrences
       {{- end }}
@@ -155,7 +172,11 @@ spec:
 {{- if .Values.sentry.ingestOccurrences.volumes }}
 {{ toYaml .Values.sentry.ingestOccurrences.volumes | indent 6 }}
 {{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 6 }}
+{{- end }}
       {{- if .Values.sentry.ingestOccurrences.priorityClassName }}
       priorityClassName: "{{ .Values.sentry.ingestOccurrences.priorityClassName }}"
       {{- end }}
+{{- end }}
 {{- end }}

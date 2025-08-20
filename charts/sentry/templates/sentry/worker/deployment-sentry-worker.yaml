@@ -42,10 +42,16 @@ spec:
       {{- if .Values.sentry.worker.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.sentry.worker.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.worker.tolerations }}
       tolerations:
 {{ toYaml .Values.sentry.worker.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.worker.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -90,6 +96,10 @@ spec:
           - "--logformat"
           - "{{ .Values.sentry.worker.logFormat }}"
           {{- end }}
+          {{- if .Values.sentry.worker.maxTasksPerChild }}
+          - "--max-tasks-per-child"
+          - "{{ .Values.sentry.worker.maxTasksPerChild }}"
+          {{- end }}
         env:
         - name: C_FORCE_ROOT
           value: "true"
@@ -97,13 +107,18 @@ spec:
 {{- if .Values.sentry.worker.env }}
 {{ toYaml .Values.sentry.worker.env | indent 8 }}
 {{- end }}
+{{- if .Values.sentry.worker.existingSecretEnv }}
+        envFrom:
+        - secretRef:
+            name: {{.Values.sentry.worker.existingSecretEnv}}
+{{- end }}
         volumeMounts:
         - mountPath: /etc/sentry
           name: config
           readOnly: true
         - mountPath: {{ .Values.filestore.filesystem.path }}
           name: sentry-data
-        {{- if .Values.geodata.volumeName }}
+        {{- if and .Values.geodata.volumeName .Values.geodata.accountID }}
         - name: {{ .Values.geodata.volumeName }}
           mountPath: {{ .Values.geodata.mountPath }}
         {{- end }}
@@ -136,6 +151,9 @@ spec:
 {{- if .Values.sentry.worker.sidecars }}
 {{ toYaml .Values.sentry.worker.sidecars | indent 6 }}
 {{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-worker
       {{- end }}
@@ -165,5 +183,13 @@ spec:
       {{- end }}
 {{- if .Values.sentry.worker.volumes }}
 {{ toYaml .Values.sentry.worker.volumes | indent 6 }}
+{{- end }}
+      {{- if and .Values.geodata.volumeName .Values.geodata.accountID }}
+      - name: {{ .Values.geodata.volumeName }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.geodata.volumeName }}
+      {{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 6 }}
 {{- end }}
 {{- end }}

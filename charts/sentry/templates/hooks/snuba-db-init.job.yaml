@@ -48,10 +48,16 @@ spec:
       {{- if .Values.hooks.snubaInit.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.hooks.snubaInit.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.hooks.snubaInit.tolerations }}
       tolerations:
 {{ toYaml .Values.hooks.snubaInit.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       restartPolicy: Never
       {{- if .Values.images.snuba.imagePullSecrets }}
@@ -109,12 +115,21 @@ spec:
         securityContext:
 {{ toYaml .Values.hooks.snubaInit.containerSecurityContext | indent 10 }}
 {{- end }}
+{{- if .Values.hooks.snubaInit.sidecars }}
+{{ toYaml .Values.hooks.snubaInit.sidecars | indent 6 }}
+{{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       volumes:
       - name: config
         configMap:
           name: {{ template "sentry.fullname" . }}-snuba
 {{- if .Values.hooks.snubaInit.volumes }}
 {{ toYaml .Values.hooks.snubaInit.volumes | indent 6 }}
+{{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 6 }}
 {{- end }}
       {{- if .Values.hooks.shareProcessNamespace }}
       shareProcessNamespace: {{ .Values.hooks.shareProcessNamespace }}

@@ -1,3 +1,4 @@
+{{- if has "feature-complete" .Values.profiles }}
 {{- if .Values.snuba.transactionsConsumer.enabled }}
 apiVersion: apps/v1
 kind: Deployment
@@ -48,10 +49,16 @@ spec:
       {{- if .Values.snuba.transactionsConsumer.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.snuba.transactionsConsumer.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.snuba.transactionsConsumer.tolerations }}
       tolerations:
 {{ toYaml .Values.snuba.transactionsConsumer.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.snuba.transactionsConsumer.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -83,8 +90,10 @@ spec:
           - "transactions"
           - "--consumer-group"
           - "transactions_group"
+          {{- if .Values.snuba.transactionsConsumer.autoOffsetReset }}
           - "--auto-offset-reset"
           - "{{ .Values.snuba.transactionsConsumer.autoOffsetReset }}"
+          {{- end }}
           {{- if .Values.snuba.transactionsConsumer.maxBatchSize }}
           - "--max-batch-size"
           - "{{ .Values.snuba.transactionsConsumer.maxBatchSize }}"
@@ -151,6 +160,12 @@ spec:
         securityContext:
 {{ toYaml .Values.snuba.transactionsConsumer.containerSecurityContext | indent 12 }}
 {{- end }}
+{{- if .Values.snuba.transactionsConsumer.sidecars }}
+{{ toYaml .Values.snuba.transactionsConsumer.sidecars | indent 6 }}
+{{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-snuba
       {{- end }}
@@ -160,5 +175,9 @@ spec:
             name: {{ template "sentry.fullname" . }}-snuba
 {{- if .Values.snuba.transactionsConsumer.volumes }}
 {{ toYaml .Values.snuba.transactionsConsumer.volumes | indent 8 }}
+{{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 8 }}
+{{- end }}
 {{- end }}
 {{- end }}

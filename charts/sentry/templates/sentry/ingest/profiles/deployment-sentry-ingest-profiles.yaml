@@ -1,3 +1,4 @@
+{{- if has "feature-complete" .Values.profiles }}
 {{- if .Values.sentry.features.enableProfiling }}
 apiVersion: apps/v1
 kind: Deployment
@@ -51,10 +52,16 @@ spec:
       {{- if .Values.sentry.ingestProfiles.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.sentry.ingestProfiles.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.ingestProfiles.tolerations }}
       tolerations:
 {{ toYaml .Values.sentry.ingestProfiles.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.ingestProfiles.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -86,6 +93,13 @@ spec:
           - "ingest-profiles"
           - "--consumer-group"
           - "ingest-profiles"
+          {{- if .Values.sentry.ingestProfiles.autoOffsetReset }}
+          - "--auto-offset-reset"
+          - "{{ .Values.sentry.ingestProfiles.autoOffsetReset }}"
+          {{- end }}
+          {{- if .Values.sentry.ingestProfiles.noStrictOffsetReset }}
+          - "--no-strict-offset-reset"
+          {{- end }}
           {{- if .Values.sentry.ingestProfiles.livenessProbe.enabled }}
           - "--healthcheck-file-path"
           - "/tmp/health.txt"
@@ -128,6 +142,9 @@ spec:
 {{- if .Values.sentry.ingestProfiles.sidecars }}
 {{ toYaml .Values.sentry.ingestProfiles.sidecars | indent 6 }}
 {{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-ingest-profiles
       {{- end }}
@@ -155,7 +172,11 @@ spec:
 {{- if .Values.sentry.ingestProfiles.volumes }}
 {{ toYaml .Values.sentry.ingestProfiles.volumes | indent 6 }}
 {{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 6 }}
+{{- end }}
       {{- if .Values.sentry.ingestProfiles.priorityClassName }}
       priorityClassName: "{{ .Values.sentry.ingestProfiles.priorityClassName }}"
       {{- end }}
+{{- end }}
 {{- end }}

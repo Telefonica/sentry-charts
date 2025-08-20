@@ -1,3 +1,4 @@
+{{- if has "feature-complete" .Values.profiles }}
 {{- if .Values.sentry.subscriptionConsumerMetrics.enabled }}
 apiVersion: apps/v1
 kind: Deployment
@@ -49,10 +50,16 @@ spec:
       {{- if .Values.sentry.subscriptionConsumerMetrics.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.sentry.subscriptionConsumerMetrics.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.subscriptionConsumerMetrics.tolerations }}
       tolerations:
 {{ toYaml .Values.sentry.subscriptionConsumerMetrics.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.subscriptionConsumerMetrics.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -84,15 +91,22 @@ spec:
           - "metrics-subscription-results"
           - "--consumer-group"
           - "query-subscription-consumer"
+          {{- if .Values.sentry.subscriptionConsumerMetrics.autoOffsetReset }}
+          - "--auto-offset-reset"
+          - "{{ .Values.sentry.subscriptionConsumerMetrics.autoOffsetReset }}"
+          {{- end }}
+          {{- if .Values.sentry.subscriptionConsumerMetrics.noStrictOffsetReset }}
+          - "--no-strict-offset-reset"
+          {{- end }}
           {{- if .Values.sentry.subscriptionConsumerMetrics.livenessProbe.enabled }}
           - "--healthcheck-file-path"
           - "/tmp/health.txt"
           {{- end }}
+          - "--"
           {{- if .Values.sentry.subscriptionConsumerMetrics.maxBatchSize }}
           - "--max-batch-size"
           - "{{ .Values.sentry.subscriptionConsumerMetrics.maxBatchSize }}"
           {{- end }}
-          - "--"
           {{- if .Values.sentry.subscriptionConsumerMetrics.concurrency }}
           - "--processes"
           - "{{ .Values.sentry.subscriptionConsumerMetrics.concurrency }}"
@@ -135,6 +149,9 @@ spec:
 {{- if .Values.sentry.subscriptionConsumerMetrics.sidecars }}
 {{ toYaml .Values.sentry.subscriptionConsumerMetrics.sidecars | indent 6 }}
 {{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-subscription-consumer-metrics
       {{- end }}
@@ -162,7 +179,11 @@ spec:
 {{- if .Values.sentry.subscriptionConsumerMetrics.volumes }}
 {{ toYaml .Values.sentry.subscriptionConsumerMetrics.volumes | indent 6 }}
 {{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 6 }}
+{{- end }}
       {{- if .Values.sentry.subscriptionConsumerMetrics.priorityClassName }}
       priorityClassName: "{{ .Values.sentry.subscriptionConsumerMetrics.priorityClassName }}"
       {{- end }}
+{{- end }}
 {{- end }}

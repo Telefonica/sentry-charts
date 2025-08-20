@@ -1,3 +1,4 @@
+{{- if has "feature-complete" .Values.profiles }}
 {{- if .Values.sentry.ingestMonitors.enabled }}
 apiVersion: apps/v1
 kind: Deployment
@@ -51,10 +52,16 @@ spec:
       {{- if .Values.sentry.ingestMonitors.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.sentry.ingestMonitors.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.ingestMonitors.tolerations }}
       tolerations:
 {{ toYaml .Values.sentry.ingestMonitors.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.ingestMonitors.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -86,10 +93,22 @@ spec:
           - "ingest-monitors"
           - "--consumer-group"
           - "ingest-monitors"
+          {{- if .Values.sentry.ingestMonitors.autoOffsetReset }}
+          - "--auto-offset-reset"
+          - "{{ .Values.sentry.ingestMonitors.autoOffsetReset }}"
+          {{- end }}
+          {{- if .Values.sentry.ingestMonitors.noStrictOffsetReset }}
+          - "--no-strict-offset-reset"
+          {{- end }}
           {{- if .Values.sentry.ingestMonitors.livenessProbe.enabled }}
           - "--healthcheck-file-path"
           - "/tmp/health.txt"
           {{- end }}
+          {{- if .Values.sentry.ingestMonitors.maxPollIntervalMs }}
+          - "--max-poll-interval-ms"
+          - "{{ .Values.sentry.ingestMonitors.maxPollIntervalMs }}"
+          {{- end }}
+          - "--"
         {{- if .Values.sentry.ingestMonitors.livenessProbe.enabled }}
         livenessProbe:
           exec:
@@ -128,6 +147,9 @@ spec:
 {{- if .Values.sentry.ingestMonitors.sidecars }}
 {{ toYaml .Values.sentry.ingestMonitors.sidecars | indent 6 }}
 {{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-ingest-monitors
       {{- end }}
@@ -155,7 +177,11 @@ spec:
 {{- if .Values.sentry.ingestMonitors.volumes }}
 {{ toYaml .Values.sentry.ingestMonitors.volumes | indent 6 }}
 {{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 6 }}
+{{- end }}
       {{- if .Values.sentry.ingestMonitors.priorityClassName }}
       priorityClassName: "{{ .Values.sentry.ingestMonitors.priorityClassName }}"
       {{- end }}
+{{- end }}
 {{- end }}

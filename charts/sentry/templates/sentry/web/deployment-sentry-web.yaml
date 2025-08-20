@@ -44,10 +44,16 @@ spec:
       {{- if .Values.sentry.web.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.sentry.web.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.web.tolerations }}
       tolerations:
 {{ toYaml .Values.sentry.web.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.web.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -99,13 +105,18 @@ spec:
 {{- if .Values.sentry.web.env }}
 {{ toYaml .Values.sentry.web.env | indent 8 }}
 {{- end }}
+{{- if .Values.sentry.web.existingSecretEnv }}
+        envFrom:
+          - secretRef:
+              name: {{.Values.sentry.web.existingSecretEnv}}
+{{- end }}
         volumeMounts:
         - mountPath: /etc/sentry
           name: config
           readOnly: true
         - mountPath: {{ .Values.filestore.filesystem.path }}
           name: sentry-data
-        {{- if .Values.geodata.volumeName }}
+        {{- if and .Values.geodata.volumeName .Values.geodata.accountID }}
         - name: {{ .Values.geodata.volumeName }}
           mountPath: {{ .Values.geodata.mountPath }}
         {{- end }}
@@ -149,6 +160,9 @@ spec:
 {{- if .Values.sentry.web.sidecars }}
 {{ toYaml .Values.sentry.web.sidecars | indent 6 }}
 {{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-web
       {{- end }}
@@ -181,7 +195,15 @@ spec:
       {{- if .Values.sentry.web.priorityClassName }}
       priorityClassName: "{{ .Values.sentry.web.priorityClassName }}"
       {{- end }}
+      {{- if and .Values.geodata.volumeName .Values.geodata.accountID }}
+      - name: {{ .Values.geodata.volumeName }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.geodata.volumeName }}
+      {{- end }}
 {{- if .Values.sentry.web.volumes }}
 {{ toYaml .Values.sentry.web.volumes | indent 6 }}
+{{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 6 }}
 {{- end }}
 {{- end }}

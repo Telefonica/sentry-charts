@@ -1,3 +1,4 @@
+{{- if has "feature-complete" .Values.profiles }}
 {{- if .Values.sentry.postProcessForwardTransactions.enabled }}
 apiVersion: apps/v1
 kind: Deployment
@@ -49,10 +50,16 @@ spec:
       {{- if .Values.sentry.postProcessForwardTransactions.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.sentry.postProcessForwardTransactions.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.postProcessForwardTransactions.tolerations }}
       tolerations:
 {{ toYaml .Values.sentry.postProcessForwardTransactions.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.postProcessForwardTransactions.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -84,9 +91,13 @@ spec:
           - "post-process-forwarder-transactions"
           - "--consumer-group"
           - "post-process-forwarder"
-          - "--synchronize-commit-log-topic=snuba-transactions-commit-log"
+          - "--synchronize-commit-log-topic={{ default "" ((.Values.kafkaTopicOverrides).prefix) }}snuba-transactions-commit-log"
           - "--synchronize-commit-group"
           - "transactions_group"
+          {{- if .Values.sentry.postProcessForwardTransactions.autoOffsetReset }}
+          - "--auto-offset-reset"
+          - "{{ .Values.sentry.postProcessForwardTransactions.autoOffsetReset }}"
+          {{- end }}
           {{- if .Values.sentry.postProcessForwardTransactions.noStrictOffsetReset }}
           - "--no-strict-offset-reset"
           {{- end }}
@@ -137,6 +148,9 @@ spec:
 {{- if .Values.sentry.postProcessForwardTransactions.sidecars }}
 {{ toYaml .Values.sentry.postProcessForwardTransactions.sidecars | indent 6 }}
 {{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-post-process-forwarder-transactions
       {{- end }}
@@ -164,7 +178,11 @@ spec:
 {{- if .Values.sentry.postProcessForwardTransactions.volumes }}
 {{ toYaml .Values.sentry.postProcessForwardTransactions.volumes | indent 6 }}
 {{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 6 }}
+{{- end }}
       {{- if .Values.sentry.postProcessForwardTransactions.priorityClassName }}
       priorityClassName: "{{ .Values.sentry.postProcessForwardTransactions.priorityClassName }}"
       {{- end }}
+{{- end }}
 {{- end }}

@@ -1,5 +1,6 @@
 {{- define "sentry.snuba.config" -}}
 {{- $redisPass := include "sentry.redis.password" . -}}
+{{- $redisSsl  := include "sentry.redis.ssl" . -}}
 settings.py: |
   import os
 
@@ -9,11 +10,35 @@ settings.py: |
 
   DEBUG = env("DEBUG", "0").lower() in ("1", "true")
 
+{{- if .Values.kafka.enabled -}}
+  {{ if .Values.kafka.provisioning.enabled }}
+
+  # Set partition counts for provisioning topics from kafka chart.
+  TOPIC_PARTITION_COUNTS = {
+    {{- $numPartitions := .Values.kafka.provisioning.numPartitions -}}
+    {{- range .Values.kafka.provisioning.topics }}
+    {{ .name | quote }}: {{ default $numPartitions .partitions }},
+    {{- end }}
+  }
+  {{- end -}}
+{{- end }}
+
+  {{- if ((.Values.kafkaTopicOverrides).prefix) }}
+  SENTRY_CHARTS_KAFKA_TOPIC_PREFIX = {{ .Values.kafkaTopicOverrides.prefix | quote }}
+
+  from snuba.utils.streams.topics import Topic
+  for topic in Topic:
+    KAFKA_TOPIC_MAP[topic.value] = f"{SENTRY_CHARTS_KAFKA_TOPIC_PREFIX}{topic.value}"
+  {{- end }}
+
   # Clickhouse Options
   CLUSTERS = [
     {
       "host": env("CLICKHOUSE_HOST", {{ include "sentry.clickhouse.host" . | quote }}),
       "port": int({{ include "sentry.clickhouse.port" . }}),
+      "secure": env("CLICKHOUSE_SECURE", False),
+      "ca_certs": env("CLICKHOUSE_CA_CERTS", None),
+      "verify": env("CLICKHOUSE_VERIFY", False),
       "user":  env("CLICKHOUSE_USER", "default"),
       "password": env("CLICKHOUSE_PASSWORD", ""),
       "max_connections": int(os.environ.get("CLICKHOUSE_MAX_CONNECTIONS", 100)),
@@ -22,10 +47,10 @@ settings.py: |
       "storage_sets": {
           "cdc",
           "discover",
+          "eap_items",
           "events",
           "events_ro",
           "metrics",
-          "metrics_summaries",
           "migrations",
           "outcomes",
           "querylog",
@@ -39,8 +64,10 @@ settings.py: |
           "search_issues",
           "generic_metrics_counters",
           "spans",
+          "events_analytics_platform",
           "group_attributes",
           "generic_metrics_gauges",
+          "metrics_summaries",
           "profile_chunks",
       },
       {{- /*
@@ -54,7 +81,7 @@ settings.py: |
       {{- end }}
       {{- if or .Values.clickhouse.enabled (not .Values.externalClickhouse.singleNode) }}
       "cluster_name": {{ include "sentry.clickhouse.cluster.name" . | quote }},
-      "distributed_cluster_name": {{ include "sentry.clickhouse.cluster.name" . | quote }},
+      "distributed_cluster_name": {{ include "sentry.clickhouse.distributed.cluster.name" . | quote }},
       {{- end }}
     },
   ]
@@ -62,10 +89,21 @@ settings.py: |
   # Redis Options
   REDIS_HOST = {{ include "sentry.redis.host" . | quote }}
   REDIS_PORT = {{ include "sentry.redis.port" . }}
-  {{- if $redisPass }}
+  {{- if or (not ($redisPass)) (.Values.externalRedis.existingSecret) (.Values.redis.auth.existingSecret) }}
+  REDIS_PASSWORD = env("REDIS_PASSWORD", "")
+  {{- else if $redisPass }}
   REDIS_PASSWORD = {{ $redisPass | quote }}
   {{- end }}
-  REDIS_DB = int(env("REDIS_DB", 1))
+
+  {{- if .Values.redis.enabled }}
+  REDIS_DB = int(env("REDIS_DB", {{ default 1 .Values.redis.db }}))
+  {{- else }}
+  REDIS_DB = int(env("REDIS_DB", {{ default 1 .Values.externalRedis.db }}))
+  {{- end }}
+
+  {{- if eq $redisSsl "true" }}
+  REDIS_SSL = True
+  {{- end }}
 
 {{- if .Values.metrics.enabled }}
   DOGSTATSD_HOST = "{{ template "sentry.fullname" . }}-metrics"

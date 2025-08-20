@@ -49,10 +49,16 @@ spec:
       {{- if .Values.sentry.subscriptionConsumerEvents.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.sentry.subscriptionConsumerEvents.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.subscriptionConsumerEvents.tolerations }}
       tolerations:
 {{ toYaml .Values.sentry.subscriptionConsumerEvents.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.subscriptionConsumerEvents.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -75,6 +81,13 @@ spec:
           - "run"
           - "consumer"
           - "events-subscription-results"
+          {{- if .Values.sentry.subscriptionConsumerEvents.autoOffsetReset }}
+          - "--auto-offset-reset"
+          - "{{ .Values.sentry.subscriptionConsumerEvents.autoOffsetReset }}"
+          {{- end }}
+          {{- if .Values.sentry.subscriptionConsumerEvents.noStrictOffsetReset }}
+          - "--no-strict-offset-reset"
+          {{- end }}
           - "--consumer-group"
           - "query-subscription-consumer"
           {{- if .Values.sentry.subscriptionConsumerEvents.livenessProbe.enabled }}
@@ -117,6 +130,9 @@ spec:
 {{- if .Values.sentry.subscriptionConsumerEvents.sidecars }}
 {{ toYaml .Values.sentry.subscriptionConsumerEvents.sidecars | indent 6 }}
 {{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-subscription-consumer-events
       {{- end }}
@@ -143,6 +159,9 @@ spec:
       {{ end }}
 {{- if .Values.sentry.subscriptionConsumerEvents.volumes }}
 {{ toYaml .Values.sentry.subscriptionConsumerEvents.volumes | indent 6 }}
+{{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 6 }}
 {{- end }}
       {{- if .Values.sentry.subscriptionConsumerEvents.priorityClassName }}
       priorityClassName: "{{ .Values.sentry.subscriptionConsumerEvents.priorityClassName }}"

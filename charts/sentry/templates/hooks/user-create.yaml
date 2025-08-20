@@ -41,11 +41,17 @@ spec:
       {{- if .Values.hooks.dbInit.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.hooks.dbInit.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       restartPolicy: Never
       {{- if .Values.hooks.dbInit.tolerations }}
       tolerations:
 {{ toYaml .Values.hooks.dbInit.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.images.sentry.imagePullSecrets }}
       imagePullSecrets:
@@ -71,11 +77,12 @@ spec:
       - name: user-create-job
         image: "{{ template "sentry.image" . }}"
         imagePullPolicy: {{ default "IfNotPresent" .Values.images.sentry.pullPolicy }}
-        command: ["/bin/bash", "-c"]
-        # Create user but do not exit 1 when user already exists (exit code 3 from createuser command)
-        # https://docs.sentry.io/server/cli/createuser/
-        args:
-          - >
+        command:
+          - "/bin/bash"
+          - "-c"
+          # Create user but do not exit 1 when user already exists (exit code 3 from createuser command)
+          # https://docs.sentry.io/server/cli/createuser/
+          - |
             sentry createuser \
               --no-input \
               --superuser \
@@ -114,12 +121,21 @@ spec:
         securityContext:
 {{ toYaml .Values.hooks.dbInit.containerSecurityContext | indent 10 }}
 {{- end }}
+{{- if .Values.hooks.dbInit.sidecars }}
+{{ toYaml .Values.hooks.dbInit.sidecars | indent 6 }}
+{{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       volumes:
       - name: config
         configMap:
           name: {{ template "sentry.fullname" . }}-sentry
 {{- if .Values.hooks.dbInit.volumes }}
 {{ toYaml .Values.hooks.dbInit.volumes | indent 6 }}
+{{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 6 }}
 {{- end }}
       {{- if .Values.hooks.shareProcessNamespace }}
       shareProcessNamespace: {{ .Values.hooks.shareProcessNamespace }}

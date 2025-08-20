@@ -1,3 +1,4 @@
+{{- if has "feature-complete" .Values.profiles }}
 {{- if .Values.sentry.subscriptionConsumerGenericMetrics.enabled }}
 apiVersion: apps/v1
 kind: Deployment
@@ -49,10 +50,16 @@ spec:
       {{- if .Values.sentry.subscriptionConsumerGenericMetrics.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.sentry.subscriptionConsumerGenericMetrics.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.subscriptionConsumerGenericMetrics.tolerations }}
       tolerations:
 {{ toYaml .Values.sentry.subscriptionConsumerGenericMetrics.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.subscriptionConsumerGenericMetrics.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -84,15 +91,22 @@ spec:
           - "generic-metrics-subscription-results"
           - "--consumer-group"
           - "query-subscription-consumer"
+          {{- if .Values.sentry.subscriptionConsumerGenericMetrics.autoOffsetReset }}
+          - "--auto-offset-reset"
+          - "{{ .Values.sentry.subscriptionConsumerGenericMetrics.autoOffsetReset }}"
+          {{- end }}
+          {{- if .Values.sentry.subscriptionConsumerGenericMetrics.noStrictOffsetReset }}
+          - "--no-strict-offset-reset"
+          {{- end }}
           {{- if .Values.sentry.subscriptionConsumerGenericMetrics.livenessProbe.enabled }}
           - "--healthcheck-file-path"
           - "/tmp/health.txt"
           {{- end }}
+          - "--"
           {{- if .Values.sentry.subscriptionConsumerGenericMetrics.maxBatchSize }}
           - "--max-batch-size"
           - "{{ .Values.sentry.subscriptionConsumerGenericMetrics.maxBatchSize }}"
           {{- end }}
-          - "--"
           {{- if .Values.sentry.subscriptionConsumerGenericMetrics.concurrency }}
           - "--processes"
           - "{{ .Values.sentry.subscriptionConsumerGenericMetrics.concurrency }}"
@@ -135,6 +149,9 @@ spec:
 {{- if .Values.sentry.subscriptionConsumerGenericMetrics.sidecars }}
 {{ toYaml .Values.sentry.subscriptionConsumerGenericMetrics.sidecars | indent 6 }}
 {{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-subscription-consumer-generic-metrics
       {{- end }}
@@ -162,7 +179,11 @@ spec:
 {{- if .Values.sentry.subscriptionConsumerGenericMetrics.volumes }}
 {{ toYaml .Values.sentry.subscriptionConsumerGenericMetrics.volumes | indent 6 }}
 {{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 6 }}
+{{- end }}
       {{- if .Values.sentry.subscriptionConsumerGenericMetrics.priorityClassName }}
       priorityClassName: "{{ .Values.sentry.subscriptionConsumerGenericMetrics.priorityClassName }}"
       {{- end }}
+{{- end }}
 {{- end }}

@@ -1,5 +1,51 @@
 # Changelog
 
+## [4.0.1](https://github.com/sentry-kubernetes/charts/compare/clickhouse-v4.0.0...clickhouse-v4.0.1) (2025-05-11)
+
+
+### Bug Fixes
+
+* **clickhouse:** add missing configOverride in statefulset-clickhouse-replica [#1709](https://github.com/sentry-kubernetes/charts/issues/1709) ([#1756](https://github.com/sentry-kubernetes/charts/issues/1756)) ([52c6283](https://github.com/sentry-kubernetes/charts/commit/52c6283554d2477d3936b80f3a24ad3fbe174c46))
+
+## [4.0.0](https://github.com/sentry-kubernetes/charts/compare/clickhouse-v3.14.1...clickhouse-v4.0.0) (2025-05-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* **clickhouse:** replace external exporter with embedded ClickHouse exporter ([#1710](https://github.com/sentry-kubernetes/charts/issues/1710))
+
+### Miscellaneous Chores
+
+* **clickhouse:** replace external exporter with embedded ClickHouse exporter ([#1710](https://github.com/sentry-kubernetes/charts/issues/1710)) ([45128a9](https://github.com/sentry-kubernetes/charts/commit/45128a9a2a4b9770f8414206a17724cbb1715928))
+
+## [3.14.1](https://github.com/sentry-kubernetes/charts/compare/clickhouse-v3.14.0...clickhouse-v3.14.1) (2025-01-17)
+
+
+### Bug Fixes
+
+* **clickhouse-chart:** correct placement of internal_replication ([#1633](https://github.com/sentry-kubernetes/charts/issues/1633)) ([5bb3e6c](https://github.com/sentry-kubernetes/charts/commit/5bb3e6c3bd742f4d7180feeef15d1243216fda82))
+
+## [3.14.0](https://github.com/sentry-kubernetes/charts/compare/clickhouse-v3.13.0...clickhouse-v3.14.0) (2024-12-28)
+
+
+### Features
+
+* bump clickhouse to 23.8 ([#1649](https://github.com/sentry-kubernetes/charts/issues/1649)) ([02d0083](https://github.com/sentry-kubernetes/charts/commit/02d00839de982d61d18f9d2655f3349a4f981a6b))
+
+## [3.13.0](https://github.com/sentry-kubernetes/charts/compare/clickhouse-v3.12.0...clickhouse-v3.13.0) (2024-10-16)
+
+
+### Features
+
+* **clickhouse:** update ClickHouse version to 23.3.19.32 ([#1552](https://github.com/sentry-kubernetes/charts/issues/1552)) ([05bcae5](https://github.com/sentry-kubernetes/charts/commit/05bcae567473f6d00c92fe3c4da84fc26fc26065))
+
+## [3.12.0](https://github.com/sentry-kubernetes/charts/compare/clickhouse-v3.11.0...clickhouse-v3.12.0) (2024-10-15)
+
+
+### Features
+
+* **clickhouse:** update ClickHouse version to 22.8.15.23 ([#1550](https://github.com/sentry-kubernetes/charts/issues/1550)) ([4271312](https://github.com/sentry-kubernetes/charts/commit/4271312e55b15f8f91bda7c70e3384042e602f5c))
+
 ## [3.11.0](https://github.com/sentry-kubernetes/charts/compare/clickhouse-v3.10.0...clickhouse-v3.11.0) (2024-09-14)
 
 
