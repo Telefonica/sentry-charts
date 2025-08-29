@@ -55,6 +55,31 @@ function find_and_validate_external_repositories() {
   TEF_IAAC="$(cd "$TEF_IAAC" || exit 1; pwd -P)"
 }
 
+function ensure_helm_repositories() {
+  echo "Checking Helm repositories..." >&2
+
+  local EXISTING_REPOS
+  EXISTING_REPOS="$(helm repo list 2>/dev/null | awk 'NR>1 {print $1}' || echo '')"
+
+  # Check and add sentry repo
+  if ! echo "$EXISTING_REPOS" | grep -q "^sentry$"; then
+    echo "  Adding sentry repository..." >&2
+    helm repo add sentry https://sentry-kubernetes.github.io/charts >&2
+  fi
+
+  # Check and add bitnami repo
+  if ! echo "$EXISTING_REPOS" | grep -q "^bitnami$"; then
+    echo "  Adding bitnami repository..." >&2
+    helm repo add bitnami https://charts.bitnami.com/bitnami >&2
+  fi
+
+  # Update if we added anything
+  if ! echo "$EXISTING_REPOS" | grep -q "^sentry$\|^bitnami$"; then
+    echo "Updating repository index..." >&2
+    helm repo update >&2
+  fi
+  echo "" >&2
+}
 
 function helm_dependency_check() {
   local DIR="$1"
@@ -68,7 +93,9 @@ function helm_dependency_check() {
   echo "$LIST_RESULT" >&2
   echo "" >&2
   NOT_OK_LINES="$(echo "$LIST_RESULT" | tail +2 | awk '/^\s*$/{next} {if ($4 != "ok") {print $4}}')"
+
   if [[ -n $NOT_OK_LINES ]]; then
+    ensure_helm_repositories
     echo "Building dependencies..." >&2
     helm dependency build "$DIR" >&2
     echo "" >&2

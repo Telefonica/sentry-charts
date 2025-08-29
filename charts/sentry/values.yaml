@@ -41,7 +41,7 @@ images:
   sentry:
     # repository: getsentry/sentry
     # tag: Chart.AppVersion
-    tag: "25.7.0-novum1"
+    tag: "25.7.0-novum11"
     # pullPolicy: IfNotPresent
     imagePullSecrets: []
   snuba:

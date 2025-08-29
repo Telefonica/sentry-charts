@@ -880,14 +880,7 @@ Set sentry email password
       name: {{ .Values.mail.existingSecret }}
       key: {{ default "mail-password" .Values.mail.existingSecretKey }}
 {{- end }}
-<<<<<<< HEAD
 {{ include "novum.sentry.env" . }}
-=======
-
-{{/*
-Set slack
-*/}}
->>>>>>> upstream/develop
 {{- if .Values.slack.existingSecret }}
 - name: SLACK_CLIENT_ID
   valueFrom:
