@@ -2,8 +2,7 @@ apiVersion: v2
 name: sentry
 description: A Helm chart for Kubernetes
 type: application
-# IMPORTANT: Remember to update images.sentry.tag in values.yaml to match appVersion
-version: 27.1.0-novum
+version: 27.1.1-novum
 # renovate image=docker.io/getsentry/sentry
 appVersion: 25.7.0
 dependencies:
