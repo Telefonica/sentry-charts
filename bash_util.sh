@@ -70,7 +70,7 @@ function ensure_helm_repositories() {
   # Check and add bitnami repo
   if ! echo "$EXISTING_REPOS" | grep -q "^bitnami$"; then
     echo "  Adding bitnami repository..." >&2
-    helm repo add bitnami https://charts.bitnami.com/bitnami >&2
+    helm repo add bitnami https://charts.bitnami.com/bitnamilegacy >&2
   fi
 
   # Update if we added anything
