@@ -1,6 +1,4 @@
 # Specific overrides for sentry in common/dev namespace
-ingress:
-  enabled: false
 
 hooks:
   novumBootstrap:
