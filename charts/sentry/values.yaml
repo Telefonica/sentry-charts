@@ -40,7 +40,8 @@ asHook: true
 images:
   sentry:
     # repository: getsentry/sentry
-    # tag: Chart.AppVersion
+    # NOTE: This tag is used for actual deployments (overrides Chart.appVersion)
+    # Currently uses custom Novum build with patches
     tag: "25.7.0-novum11"
     # pullPolicy: IfNotPresent
     imagePullSecrets: []
@@ -2971,7 +2972,7 @@ pgbouncer:
     user: ''
     password: ''
   image:
-    repository: "bitnami/pgbouncer"
+    repository: "bitnamilegacy/pgbouncer"
     tag: "1.23.1-debian-12-r5"
     pullPolicy: IfNotPresent
   replicas: 2
