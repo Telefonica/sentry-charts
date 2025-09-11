@@ -48,10 +48,16 @@ spec:
       {{- if .Values.snuba.consumer.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.snuba.consumer.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.snuba.consumer.tolerations }}
       tolerations:
 {{ toYaml .Values.snuba.consumer.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.snuba.consumer.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -83,8 +89,10 @@ spec:
           - "errors"
           - "--consumer-group"
           - "snuba-consumers"
+          {{- if .Values.snuba.consumer.autoOffsetReset }}
           - "--auto-offset-reset"
           - "{{ .Values.snuba.consumer.autoOffsetReset }}"
+          {{- end }}
           {{- if .Values.snuba.consumer.maxBatchSize }}
           - "--max-batch-size"
           - "{{ .Values.snuba.consumer.maxBatchSize }}"
@@ -151,6 +159,12 @@ spec:
         securityContext:
 {{ toYaml .Values.snuba.consumer.containerSecurityContext | indent 12 }}
 {{- end }}
+{{- if .Values.snuba.consumer.sidecars }}
+{{ toYaml .Values.snuba.consumer.sidecars | indent 6 }}
+{{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-snuba
       {{- end }}
@@ -160,5 +174,8 @@ spec:
             name: {{ template "sentry.fullname" . }}-snuba
 {{- if .Values.snuba.consumer.volumes }}
 {{ toYaml .Values.snuba.consumer.volumes | indent 8 }}
+{{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 8 }}
 {{- end }}
 {{- end }}

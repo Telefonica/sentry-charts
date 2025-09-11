@@ -48,10 +48,16 @@ spec:
       {{- if .Values.snuba.outcomesBillingConsumer.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.snuba.outcomesBillingConsumer.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.snuba.outcomesBillingConsumer.tolerations }}
       tolerations:
 {{ toYaml .Values.snuba.outcomesBillingConsumer.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.snuba.outcomesBillingConsumer.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -83,10 +89,11 @@ spec:
           - "outcomes_raw"
           - "--consumer-group"
           - "snuba-consumers"
+          {{- if .Values.snuba.outcomesBillingConsumer.autoOffsetReset }}
           - "--auto-offset-reset"
           - "{{ .Values.snuba.outcomesBillingConsumer.autoOffsetReset }}"
-          - "--raw-events-topic"
-          - "outcomes-billing"
+          {{- end }}
+          - "--raw-events-topic={{ default "" ((.Values.kafkaTopicOverrides).prefix) }}outcomes-billing"
           {{- if .Values.snuba.outcomesBillingConsumer.maxBatchSize }}
           - "--max-batch-size"
           - "{{ .Values.snuba.outcomesBillingConsumer.maxBatchSize }}"
@@ -122,6 +129,11 @@ spec:
           - "--health-check-file"
           - "/tmp/health.txt"
           {{- end }}
+          {{- if .Values.snuba.outcomesBillingConsumer.maxPollIntervalMs }}
+          - "--max-poll-interval-ms"
+          - "{{ .Values.snuba.outcomesBillingConsumer.maxPollIntervalMs }}"
+          {{- end }}
+          - "--"
         {{- if .Values.snuba.outcomesBillingConsumer.livenessProbe.enabled }}
         livenessProbe:
           exec:
@@ -153,6 +165,12 @@ spec:
         securityContext:
 {{ toYaml .Values.snuba.outcomesBillingConsumer.containerSecurityContext | indent 12 }}
 {{- end }}
+{{- if .Values.snuba.outcomesBillingConsumer.sidecars }}
+{{ toYaml .Values.snuba.outcomesBillingConsumer.sidecars | indent 6 }}
+{{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-snuba
       {{- end }}
@@ -162,5 +180,8 @@ spec:
             name: {{ template "sentry.fullname" . }}-snuba
 {{- if .Values.snuba.outcomesBillingConsumer.volumes }}
 {{ toYaml .Values.snuba.outcomesBillingConsumer.volumes | indent 8 }}
+{{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 8 }}
 {{- end }}
 {{- end }}

@@ -49,10 +49,16 @@ spec:
       {{- if .Values.sentry.postProcessForwardErrors.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.sentry.postProcessForwardErrors.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.postProcessForwardErrors.tolerations }}
       tolerations:
 {{ toYaml .Values.sentry.postProcessForwardErrors.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.postProcessForwardErrors.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -84,8 +90,15 @@ spec:
           - "post-process-forwarder-errors"
           - "--consumer-group"
           - "post-process-forwarder"
-          - "--synchronize-commit-log-topic=snuba-commit-log"
+          - "--synchronize-commit-log-topic={{ default "" ((.Values.kafkaTopicOverrides).prefix) }}snuba-commit-log"
           - "--synchronize-commit-group=snuba-consumers"
+          {{- if .Values.sentry.postProcessForwardErrors.autoOffsetReset }}
+          - "--auto-offset-reset"
+          - "{{ .Values.sentry.postProcessForwardErrors.autoOffsetReset }}"
+          {{- end }}
+          {{- if .Values.sentry.postProcessForwardErrors.noStrictOffsetReset }}
+          - "--no-strict-offset-reset"
+          {{- end }}
           {{- if .Values.sentry.postProcessForwardErrors.livenessProbe.enabled }}
           - "--healthcheck-file-path"
           - "/tmp/health.txt"
@@ -126,6 +139,9 @@ spec:
 {{- if .Values.sentry.postProcessForwardErrors.sidecars }}
 {{ toYaml .Values.sentry.postProcessForwardErrors.sidecars | indent 6 }}
 {{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-post-process-forwarder-errors
       {{- end }}
@@ -152,6 +168,9 @@ spec:
       {{ end }}
 {{- if .Values.sentry.postProcessForwardErrors.volumes }}
 {{ toYaml .Values.sentry.postProcessForwardErrors.volumes | indent 6 }}
+{{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 6 }}
 {{- end }}
       {{- if .Values.sentry.postProcessForwardErrors.priorityClassName }}
       priorityClassName: "{{ .Values.sentry.postProcessForwardErrors.priorityClassName }}"

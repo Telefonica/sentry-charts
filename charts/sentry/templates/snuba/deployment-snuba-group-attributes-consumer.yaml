@@ -48,10 +48,16 @@ spec:
       {{- if .Values.snuba.groupAttributesConsumer.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.snuba.groupAttributesConsumer.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.snuba.groupAttributesConsumer.tolerations }}
       tolerations:
 {{ toYaml .Values.snuba.groupAttributesConsumer.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.snuba.groupAttributesConsumer.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -83,8 +89,10 @@ spec:
           - "group_attributes"
           - "--consumer-group"
           - "snuba-group-attributes-group"
+          {{- if .Values.snuba.groupAttributesConsumer.autoOffsetReset }}
           - "--auto-offset-reset"
           - "{{ .Values.snuba.groupAttributesConsumer.autoOffsetReset }}"
+          {{- end }}
           {{- if .Values.snuba.groupAttributesConsumer.maxBatchSize }}
           - "--max-batch-size"
           - "{{ .Values.snuba.groupAttributesConsumer.maxBatchSize }}"
@@ -151,6 +159,12 @@ spec:
         securityContext:
 {{ toYaml .Values.snuba.groupAttributesConsumer.containerSecurityContext | indent 12 }}
 {{- end }}
+{{- if .Values.snuba.groupAttributesConsumer.sidecars }}
+{{ toYaml .Values.snuba.groupAttributesConsumer.sidecars | indent 6 }}
+{{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-snuba
       {{- end }}
@@ -160,5 +174,8 @@ spec:
             name: {{ template "sentry.fullname" . }}-snuba
 {{- if .Values.snuba.groupAttributesConsumer.volumes }}
 {{ toYaml .Values.snuba.groupAttributesConsumer.volumes | indent 8 }}
+{{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 8 }}
 {{- end }}
 {{- end }}

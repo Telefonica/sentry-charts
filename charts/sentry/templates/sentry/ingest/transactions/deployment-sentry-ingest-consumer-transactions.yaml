@@ -1,3 +1,4 @@
+{{- if has "feature-complete" .Values.profiles }}
 {{- if .Values.sentry.ingestConsumerTransactions.enabled }}
 apiVersion: apps/v1
 kind: Deployment
@@ -51,10 +52,16 @@ spec:
       {{- if .Values.sentry.ingestConsumerTransactions.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.sentry.ingestConsumerTransactions.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.ingestConsumerTransactions.tolerations }}
       tolerations:
 {{ toYaml .Values.sentry.ingestConsumerTransactions.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.ingestConsumerTransactions.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -86,6 +93,10 @@ spec:
           - "ingest-transactions"
           - "--consumer-group"
           - "ingest-consumer"
+          {{- if .Values.sentry.ingestConsumerTransactions.autoOffsetReset }}
+          - "--auto-offset-reset"
+          - "{{ .Values.sentry.ingestConsumerTransactions.autoOffsetReset }}"
+          {{- end }}
           {{- if .Values.sentry.ingestConsumerTransactions.noStrictOffsetReset }}
           - "--no-strict-offset-reset"
           {{- end }}
@@ -93,13 +104,14 @@ spec:
           - "--healthcheck-file-path"
           - "/tmp/health.txt"
           {{- end }}
-          {{- if .Values.sentry.ingestConsumerTransactions.maxBatchSize }}
-          - "--max-batch-size"
-          - "{{ .Values.sentry.ingestConsumerTransactions.maxBatchSize }}"
-          {{- end }}
           {{- if .Values.sentry.ingestConsumerTransactions.logLevel }}
           - "--log-level"
           - "{{ .Values.sentry.ingestConsumerTransactions.logLevel }}"
+          {{- end }}
+          - "--"
+          {{- if .Values.sentry.ingestConsumerTransactions.maxBatchSize }}
+          - "--max-batch-size"
+          - "{{ .Values.sentry.ingestConsumerTransactions.maxBatchSize }}"
           {{- end }}
           {{- if .Values.sentry.ingestConsumerTransactions.inputBlockSize }}
           - "--input-block-size"
@@ -109,7 +121,6 @@ spec:
           - "--max-batch-time-ms"
           - "{{ .Values.sentry.ingestConsumerTransactions.maxBatchTimeMs }}"
           {{- end }}
-          - "--"
           {{- if .Values.sentry.ingestConsumerTransactions.concurrency }}
           - "--processes"
           - "{{ .Values.sentry.ingestConsumerTransactions.concurrency }}"
@@ -152,6 +163,9 @@ spec:
 {{- if .Values.sentry.ingestConsumerTransactions.sidecars }}
 {{ toYaml .Values.sentry.ingestConsumerTransactions.sidecars | indent 6 }}
 {{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-ingest-consumer-transactions
       {{- end }}
@@ -179,7 +193,11 @@ spec:
 {{- if .Values.sentry.ingestConsumerTransactions.volumes }}
 {{ toYaml .Values.sentry.ingestConsumerTransactions.volumes | indent 6 }}
 {{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 6 }}
+{{- end }}
       {{- if .Values.sentry.ingestConsumerTransactions.priorityClassName }}
       priorityClassName: "{{ .Values.sentry.ingestConsumerTransactions.priorityClassName }}"
       {{- end }}
+{{- end }}
 {{- end }}

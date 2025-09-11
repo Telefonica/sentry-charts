@@ -2,6 +2,8 @@
 {{- $redisHost := include "sentry.redis.host" . -}}
 {{- $redisPort := include "sentry.redis.port" . -}}
 {{- $redisPass := include "sentry.redis.password" . -}}
+{{- $redisDb     := include "sentry.redis.db" . -}}
+{{- $redisProto  := ternary "rediss" "redis" (eq (include "sentry.redis.ssl" .) "true")  -}}
 config.yml: |-
   {{- if .Values.system.adminEmail }}
   system.admin-email: {{ .Values.system.adminEmail | quote }}
@@ -73,15 +75,7 @@ config.yml: |-
   #########
   # Redis #
   #########
-  redis.clusters:
-    default:
-      hosts:
-        0:
-          host: {{ $redisHost | quote }}
-          port: {{ $redisPort }}
-          {{- if $redisPass }}
-          password: {{ $redisPass | quote }}
-          {{- end }}
+  # This is configured in the sentry.conf.py as that has support for environment variables.
 
   ################
   # File storage #
@@ -158,6 +152,8 @@ sentry.conf.py: |-
   # General #
   ###########
 
+  # Disable sends anonymous usage statistics
+  SENTRY_BEACON = False
 
   secret_key = env('SENTRY_SECRET_KEY')
   if not secret_key:
@@ -165,11 +161,40 @@ sentry.conf.py: |-
 
   SENTRY_OPTIONS['system.secret-key'] = secret_key
 
+  # Set default for SAMPLED_DEFAULT_RATE:
+  SAMPLED_DEFAULT_RATE = {{ .Values.global.sampledDefaultRate | default 1.0 }}
+
   # Instruct Sentry that this install intends to be run by a single organization
   # and thus various UI optimizations should be enabled.
   SENTRY_SINGLE_ORGANIZATION = {{ if .Values.sentry.singleOrganization }}True{{ else }}False{{ end }}
 
   SENTRY_OPTIONS["system.event-retention-days"] = int(env('SENTRY_EVENT_RETENTION_DAYS') or {{ .Values.sentry.cleanup.days | quote }})
+
+  {{- if has "errors-only" .Values.profiles }}
+  SENTRY_SELF_HOSTED_ERRORS_ONLY = True
+  {{- end }}
+
+  #########
+  # Redis #
+  #########
+
+  # Generic Redis configuration used as defaults for various things including:
+  # Buffers, Quotas, TSDB
+  SENTRY_OPTIONS["redis.clusters"] = {
+    "default": {
+      "hosts": {
+        0: {
+          "host": {{ $redisHost | quote }},
+          "password": os.environ.get("REDIS_PASSWORD", {{ $redisPass | quote }}),
+          "port": {{ $redisPort | quote }},
+          {{- if .Values.externalRedis.ssl }}
+          "ssl": {{ .Values.externalRedis.ssl | quote }},
+          {{- end }}
+          "db": {{ $redisDb | quote }}
+        }
+      }
+    }
+  }
 
   #########
   # Queue #
@@ -182,9 +207,9 @@ sentry.conf.py: |-
   {{- if or (.Values.rabbitmq.enabled) (.Values.rabbitmq.host) }}
   BROKER_URL = os.environ.get("BROKER_URL", "amqp://{{ .Values.rabbitmq.auth.username }}:{{ .Values.rabbitmq.auth.password }}@{{ template "sentry.rabbitmq.host" . }}:5672/{{ .Values.rabbitmq.vhost }}")
   {{- else if $redisPass }}
-  BROKER_URL = os.environ.get("BROKER_URL", "redis://:{{ $redisPass }}@{{ $redisHost }}:{{ $redisPort }}/0")
-  {{- else }}
-  BROKER_URL = os.environ.get("BROKER_URL", "redis://{{ $redisHost }}:{{ $redisPort }}/0")
+  BROKER_URL = os.environ.get("BROKER_URL", "{{ $redisProto }}://:{{ $redisPass }}@{{ $redisHost }}:{{ $redisPort }}/{{ $redisDb }}")
+  {{- else if and (not .Values.externalRedis.existingSecret) (not .Values.redis.auth.existingSecret)}}
+  BROKER_URL = os.environ.get("BROKER_URL", "{{ $redisProto }}://{{ $redisHost }}:{{ $redisPort }}/{{ $redisDb }}")
   {{- end }}
 
   #########
@@ -206,13 +231,43 @@ sentry.conf.py: |-
   SENTRY_CACHE = "sentry.cache.redis.RedisCache"
 
   DEFAULT_KAFKA_OPTIONS = {
-      "bootstrap.servers": {{ (include "sentry.kafka.bootstrap_servers_string" .) | quote }},
-      "message.max.bytes": 50000000,
-      "socket.timeout.ms": 1000,
+      "common": {
+          "bootstrap.servers": {{ (include "sentry.kafka.bootstrap_servers_string" .) | quote }},
+          "message.max.bytes": {{ include "sentry.kafka.message_max_bytes" . }},
+      {{- $sentryKafkaCompressionType := include "sentry.kafka.compression_type" . -}}
+      {{- if $sentryKafkaCompressionType }}
+          "compression.type": {{ $sentryKafkaCompressionType | quote }},
+      {{- end }}
+          "socket.timeout.ms": {{ include "sentry.kafka.socket_timeout_ms" . }},
+      {{- $sentryKafkaSaslMechanism := include "sentry.kafka.sasl_mechanism" . -}}
+      {{- if not (eq "None" $sentryKafkaSaslMechanism) }}
+          "sasl.mechanism": {{ $sentryKafkaSaslMechanism | quote }},
+      {{- end }}
+      {{- $sentryKafkaSaslUsername := include "sentry.kafka.sasl_username" . -}}
+      {{- if not (eq "None" $sentryKafkaSaslUsername) }}
+          "sasl.username": {{ $sentryKafkaSaslUsername | quote }},
+      {{- end }}
+      {{- $sentryKafkaSaslPassword := include "sentry.kafka.sasl_password" . -}}
+      {{- if not (eq "None" $sentryKafkaSaslPassword) }}
+          "sasl.password": {{ $sentryKafkaSaslPassword | quote }},
+      {{- end }}
+      {{- $sentryKafkaSecurityProtocol := include "sentry.kafka.security_protocol" . -}}
+      {{- if not (eq "plaintext" $sentryKafkaSecurityProtocol) }}
+          "security.protocol": {{ $sentryKafkaSecurityProtocol | quote }},
+      {{- end }}
+      }
   }
 
   SENTRY_EVENTSTREAM = "sentry.eventstream.kafka.KafkaEventStream"
   SENTRY_EVENTSTREAM_OPTIONS = {"producer_configuration": DEFAULT_KAFKA_OPTIONS}
+
+  {{- if ((.Values.kafkaTopicOverrides).prefix) }}
+  SENTRY_CHARTS_KAFKA_TOPIC_PREFIX = {{ .Values.kafkaTopicOverrides.prefix | quote }}
+
+  from sentry.conf.types.kafka_definition import Topic
+  for topic in Topic:
+    KAFKA_TOPIC_OVERRIDES[topic.value] = f"{SENTRY_CHARTS_KAFKA_TOPIC_PREFIX}{topic.value}"
+  {{- end }}
 
   KAFKA_CLUSTERS["default"] = DEFAULT_KAFKA_OPTIONS
 
@@ -300,27 +355,27 @@ sentry.conf.py: |-
       # This is needed to prevent https://git.io/fj7Lw
       "uwsgi-socket": None,
       # Keep this between 15s-75s as that's what Relay supports
-      "http-keepalive": {{ .Values.config.web.httpKeepalive }},
-      "http-chunked-input": True,
+      "http-keepalive": {{ .Values.config.web.httpKeepalive | int }},
+      "http-chunked-input": {{ .Values.config.web.httpChunkedInput | ternary "True" "False" }},
       # the number of web workers
-      'workers': 3,
+      'workers': {{ .Values.config.web.workers | int }},
       # Turn off memory reporting
-      "memory-report": False,
+      "memory-report": {{ .Values.config.web.memoryReport | ternary "True" "False" }},
       # Some stuff so uwsgi will cycle workers sensibly
-      'max-requests': {{ .Values.config.web.maxRequests }},
-      'max-requests-delta': {{ .Values.config.web.maxRequestsDelta }},
-      'max-worker-lifetime': {{ .Values.config.web.maxWorkerLifetime }},
+      'max-requests': {{ .Values.config.web.maxRequests | int }},
+      'max-requests-delta': {{ .Values.config.web.maxRequestsDelta | int }},
+      'max-worker-lifetime': {{ .Values.config.web.maxWorkerLifetime | int }},
       # Duplicate options from sentry default just so we don't get
       # bit by sentry changing a default value that we depend on.
-      'thunder-lock': True,
-      'log-x-forwarded-for': False,
-      'buffer-size': 32768,
-      'limit-post': 209715200,
-      'disable-logging': True,
-      'reload-on-rss': 600,
-      'ignore-sigpipe': True,
-      'ignore-write-errors': True,
-      'disable-write-exception': True,
+      'thunder-lock': {{ .Values.config.web.thunderLock | ternary "True" "False" }},
+      'log-x-forwarded-for': {{ .Values.config.web.logXForwardedFor | ternary "True" "False" }},
+      'buffer-size': {{ .Values.config.web.bufferSize | int }},
+      'limit-post': {{ .Values.config.web.limitPost | int }},
+      'disable-logging': {{ .Values.config.web.disableLogging | ternary "True" "False" }},
+      'reload-on-rss': {{ .Values.config.web.reloadOnRss | int }},
+      'ignore-sigpipe': {{ .Values.config.web.ignoreSignpipe | ternary "True" "False" }},
+      'ignore-write-errors': {{ .Values.config.web.ignoreWriteErrors | ternary "True" "False" }},
+      'disable-write-exception': {{ .Values.config.web.disableWriteException | ternary "True" "False" }},
   }
 
   ###########
@@ -435,6 +490,8 @@ sentry.conf.py: |-
               "organizations:session-replay-slack-new-issue",
               "organizations:session-replay-issue-emails",
               "organizations:session-replay-event-linking",
+              "organizations:session-replay-enable-canvas",
+              "organizations:session-replay-enable-canvas-replayer",
               "organizations:session-replay-weekly-email",
               "organizations:session-replay-trace-table",
               "organizations:session-replay-rage-dead-selectors",
@@ -459,29 +516,42 @@ sentry.conf.py: |-
               {{- if .Values.sentry.features.enableFeedback }}
               "organizations:user-feedback-ui",
               "organizations:user-feedback-ingest",
+              "organizations:user-feedback-replay-clip",
               "organizations:feedback-ingest",
               "organizations:feedback-post-process-group",
               "organizations:feedback-visible",
               {{ end -}}
 
               {{- if .Values.sentry.features.enableSpan }}
-              "projects:span-metrics-extraction",
-              "organizations:starfish-browser-resource-module-image-view",
-              "organizations:starfish-browser-resource-module-ui",
-              "organizations:starfish-browser-webvitals",
-              "organizations:starfish-browser-webvitals-pageoverview-v2",
-              "organizations:starfish-browser-webvitals-use-backend-scores",
-              "organizations:performance-calculate-score-relay",
-              "organizations:starfish-browser-webvitals-replace-fid-with-inp",
-              "organizations:deprecate-fid-from-performance-score",
-              "organizations:performance-database-view",
-              "organizations:performance-screens-view",
-              "organizations:mobile-ttid-ttfd-contribution",
-              "organizations:starfish-mobile-appstart",
-              "organizations:standalone-span-ingestion",
-              "organizations:insights-entry-points",
-              "organizations:insights-initial-modules",
-              "organizations:insights-addon-modules",
+              # Trace View -- make sure this is all set
+                "organizations:trace-view-v1", # This one is required
+                "organizations:trace-view-load-more", # Optional
+                "organizations:trace-tabs-ui", # Optional
+                "organizations:trace-view-linked-traces", # Optional
+                "organizations:replay-trace-view-v1", # Optional
+                "organizations:trace-drawer-action", # Optional
+                "organizations:trace-spans-format", # Optional
+              # Performance Trace Explorer
+                "organizations:performance-trace-explorer", # Required
+                "organizations:performance-trace-details", # Required
+                "organizations:performance-trace-explorer-sorting",
+                "organizations:performance-tracing-without-performance",
+                "organizations:performance-use-metrics",
+              # Span-based Metrics
+                "projects:span-metrics-extraction",
+                "projects:span-metrics-extraction-addons",
+                "organizations:span-stats",
+                "organizations:performance-issues-spans",
+                "organizations:transaction-metrics-extraction", # Extraction metrics for transactions during ingestion.
+                "organizations:indexed-spans-extraction", # Starfish: extract metrics from the spans
+                "organizations:visibility-explore-view", # Enable the new explore page
+                "organizations:visibility-explore-admin", # Enable admin features on the new explore page
+                "organizations:visibility-explore-equations", # Enable equations feature on the new explore page
+                "organizations:visibility-explore-progressive-loading",
+                "organizations:visibility-explore-skip-preflight",
+                "organizations:visibility-explore-tabs", # Enable merging all the modes into tabs
+                "organizations:visibility-explore-range-high", # Enable high date range options on new explore page
+                "organizations:explore-multi-query", # Enable explore multi query page
               {{ end -}}
 
               "organizations:dashboards-mep",

@@ -1,3 +1,4 @@
+{{- if has "feature-complete" .Values.profiles }}
 {{- if .Values.sentry.features.enableProfiling }}
 apiVersion: apps/v1
 kind: Deployment
@@ -48,10 +49,16 @@ spec:
       {{- if .Values.snuba.profilingProfilesConsumer.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.snuba.profilingProfilesConsumer.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.snuba.profilingProfilesConsumer.tolerations }}
       tolerations:
 {{ toYaml .Values.snuba.profilingProfilesConsumer.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.snuba.profilingProfilesConsumer.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -83,8 +90,10 @@ spec:
           - "profiles"
           - "--consumer-group"
           - "profiles_group"
+          {{- if .Values.snuba.profilingProfilesConsumer.autoOffsetReset }}
           - "--auto-offset-reset"
           - "{{ .Values.snuba.profilingProfilesConsumer.autoOffsetReset }}"
+          {{- end }}
           {{- if .Values.snuba.profilingProfilesConsumer.maxBatchSize }}
           - "--max-batch-size"
           - "{{ .Values.snuba.profilingProfilesConsumer.maxBatchSize }}"
@@ -151,6 +160,12 @@ spec:
         securityContext:
 {{ toYaml .Values.snuba.profilingProfilesConsumer.containerSecurityContext | indent 12 }}
 {{- end }}
+{{- if .Values.snuba.profilingProfilesConsumer.sidecars }}
+{{ toYaml .Values.snuba.profilingProfilesConsumer.sidecars | indent 6 }}
+{{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-snuba
       {{- end }}
@@ -160,5 +175,9 @@ spec:
             name: {{ template "sentry.fullname" . }}-snuba
 {{- if .Values.snuba.profilingProfilesConsumer.volumes }}
 {{ toYaml .Values.snuba.profilingProfilesConsumer.volumes | indent 8 }}
+{{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 8 }}
+{{- end }}
 {{- end }}
 {{- end }}

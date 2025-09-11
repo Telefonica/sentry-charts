@@ -1,3 +1,4 @@
+{{- if has "feature-complete" .Values.profiles }}
 {{- if .Values.sentry.subscriptionConsumerTransactions.enabled }}
 apiVersion: apps/v1
 kind: Deployment
@@ -49,10 +50,16 @@ spec:
       {{- if .Values.sentry.subscriptionConsumerTransactions.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.sentry.subscriptionConsumerTransactions.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.subscriptionConsumerTransactions.tolerations }}
       tolerations:
 {{ toYaml .Values.sentry.subscriptionConsumerTransactions.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.subscriptionConsumerTransactions.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -77,6 +84,13 @@ spec:
           - "transactions-subscription-results"
           - "--consumer-group"
           - "query-subscription-consumer"
+          {{- if .Values.sentry.subscriptionConsumerTransactions.autoOffsetReset }}
+          - "--auto-offset-reset"
+          - "{{ .Values.sentry.subscriptionConsumerTransactions.autoOffsetReset }}"
+          {{- end }}
+          {{- if .Values.sentry.subscriptionConsumerTransactions.noStrictOffsetReset }}
+          - "--no-strict-offset-reset"
+          {{- end }}
           {{- if .Values.sentry.subscriptionConsumerTransactions.livenessProbe.enabled }}
           - "--healthcheck-file-path"
           - "/tmp/health.txt"
@@ -117,6 +131,9 @@ spec:
 {{- if .Values.sentry.subscriptionConsumerTransactions.sidecars }}
 {{ toYaml .Values.sentry.subscriptionConsumerTransactions.sidecars | indent 6 }}
 {{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-subscription-consumer-transactions
       {{- end }}
@@ -144,7 +161,11 @@ spec:
 {{- if .Values.sentry.subscriptionConsumerTransactions.volumes }}
 {{ toYaml .Values.sentry.subscriptionConsumerTransactions.volumes | indent 6 }}
 {{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 6 }}
+{{- end }}
       {{- if .Values.sentry.subscriptionConsumerTransactions.priorityClassName }}
       priorityClassName: "{{ .Values.sentry.subscriptionConsumerTransactions.priorityClassName }}"
       {{- end }}
+{{- end }}
 {{- end }}

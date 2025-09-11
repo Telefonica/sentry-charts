@@ -1,3 +1,4 @@
+{{- if has "feature-complete" .Values.profiles }}
 {{- if .Values.snuba.subscriptionConsumerMetrics.enabled }}
 apiVersion: apps/v1
 kind: Deployment
@@ -48,10 +49,16 @@ spec:
       {{- if .Values.snuba.subscriptionConsumerMetrics.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.snuba.subscriptionConsumerMetrics.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.snuba.subscriptionConsumerMetrics.tolerations }}
       tolerations:
 {{ toYaml .Values.snuba.subscriptionConsumerMetrics.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.snuba.subscriptionConsumerMetrics.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -72,7 +79,10 @@ spec:
         command:
           - "snuba"
           - "subscriptions-scheduler-executor"
-          - "--auto-offset-reset={{ .Values.snuba.subscriptionConsumerMetrics.autoOffsetReset }}"
+          {{- if .Values.snuba.subscriptionConsumerMetrics.autoOffsetReset }}
+          - "--auto-offset-reset"
+          - "{{ .Values.snuba.subscriptionConsumerMetrics.autoOffsetReset }}"
+          {{- end }}
           - "--dataset=metrics"
           - "--entity=metrics_sets"
           - "--entity=metrics_counters"
@@ -118,6 +128,12 @@ spec:
         securityContext:
 {{ toYaml .Values.snuba.subscriptionConsumerMetrics.containerSecurityContext | indent 12 }}
 {{- end }}
+{{- if .Values.snuba.subscriptionConsumerMetrics.sidecars }}
+{{ toYaml .Values.snuba.subscriptionConsumerMetrics.sidecars | indent 6 }}
+{{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-snuba
       {{- end }}
@@ -127,5 +143,9 @@ spec:
           name: {{ template "sentry.fullname" . }}-snuba
 {{- if .Values.snuba.subscriptionConsumerMetrics.volumes }}
 {{ toYaml .Values.snuba.subscriptionConsumerMetrics.volumes | indent 6 }}
+{{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 6 }}
+{{- end }}
 {{- end }}
 {{- end }}

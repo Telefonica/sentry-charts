@@ -40,10 +40,16 @@ spec:
       {{- if .Values.metrics.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.metrics.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.metrics.tolerations }}
       tolerations:
 {{ toYaml .Values.metrics.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.metrics.schedulerName }}
       schedulerName: "{{ .Values.metrics.schedulerName }}"
@@ -54,6 +60,10 @@ spec:
       {{- if .Values.dnsConfig }}
       dnsConfig:
 {{ toYaml .Values.dnsConfig | indent 8 }}
+      {{- end }}
+      {{- if .Values.metrics.image.imagePullSecrets }}
+      imagePullSecrets:
+{{ toYaml .Values.metrics.image.imagePullSecrets | indent 8 }}
       {{- end }}
       {{- if .Values.metrics.securityContext }}
       securityContext:
@@ -105,9 +115,20 @@ spec:
         securityContext:
 {{ toYaml .Values.metrics.containerSecurityContext | indent 10 }}
 {{- end }}
-{{- if .Values.metrics.volumes }}
+{{- if .Values.metrics.sidecars }}
+{{ toYaml .Values.metrics.sidecars | indent 6 }}
+{{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
+{{- if or .Values.metrics.volumes .Values.global.volumes }}
       volumes:
+{{- if .Values.metrics.volumes }}
 {{ toYaml .Values.metrics.volumes | indent 6 }}
+{{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 6 }}
+{{- end }}
 {{- end }}
 
       {{- if .Values.serviceAccount.enabled }}

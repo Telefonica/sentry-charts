@@ -48,10 +48,16 @@ spec:
       {{- if .Values.snuba.subscriptionConsumerEvents.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.snuba.subscriptionConsumerEvents.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.snuba.subscriptionConsumerEvents.tolerations }}
       tolerations:
 {{ toYaml .Values.snuba.subscriptionConsumerEvents.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.snuba.subscriptionConsumerEvents.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -72,7 +78,10 @@ spec:
         command:
           - "snuba"
           - "subscriptions-scheduler-executor"
-          - "--auto-offset-reset={{ .Values.snuba.subscriptionConsumerEvents.autoOffsetReset }}"
+          {{- if .Values.snuba.subscriptionConsumerEvents.autoOffsetReset }}
+          - "--auto-offset-reset"
+          - "{{ .Values.snuba.subscriptionConsumerEvents.autoOffsetReset }}"
+          {{- end }}
           - "--dataset=events"
           - "--entity=events"
           {{- if .Values.snuba.subscriptionConsumerEvents.noStrictOffsetReset }}
@@ -117,6 +126,12 @@ spec:
         securityContext:
 {{ toYaml .Values.snuba.subscriptionConsumerEvents.containerSecurityContext | indent 12 }}
 {{- end }}
+{{- if .Values.snuba.subscriptionConsumerEvents.sidecars }}
+{{ toYaml .Values.snuba.subscriptionConsumerEvents.sidecars | indent 6 }}
+{{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-snuba
       {{- end }}
@@ -126,5 +141,8 @@ spec:
           name: {{ template "sentry.fullname" . }}-snuba
 {{- if .Values.snuba.subscriptionConsumerEvents.volumes }}
 {{ toYaml .Values.snuba.subscriptionConsumerEvents.volumes | indent 6 }}
+{{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 6 }}
 {{- end }}
 {{- end }}

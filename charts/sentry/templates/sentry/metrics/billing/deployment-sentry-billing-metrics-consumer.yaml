@@ -1,3 +1,4 @@
+{{- if has "feature-complete" .Values.profiles }}
 {{- if .Values.sentry.billingMetricsConsumer.enabled }}
 apiVersion: apps/v1
 kind: Deployment
@@ -51,10 +52,16 @@ spec:
       {{- if .Values.sentry.billingMetricsConsumer.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.sentry.billingMetricsConsumer.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.billingMetricsConsumer.tolerations }}
       tolerations:
 {{ toYaml .Values.sentry.billingMetricsConsumer.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.billingMetricsConsumer.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -86,6 +93,13 @@ spec:
           - "billing-metrics-consumer"
           - "--consumer-group"
           - "billing-metrics-consumer"
+          {{- if .Values.sentry.billingMetricsConsumer.autoOffsetReset }}
+          - "--auto-offset-reset"
+          - "{{ .Values.sentry.billingMetricsConsumer.autoOffsetReset }}"
+          {{- end }}
+          {{- if .Values.sentry.billingMetricsConsumer.noStrictOffsetReset }}
+          - "--no-strict-offset-reset"
+          {{- end }}
           {{- if .Values.sentry.billingMetricsConsumer.livenessProbe.enabled }}
           - "--healthcheck-file-path"
           - "/tmp/health.txt"
@@ -129,6 +143,9 @@ spec:
 {{- if .Values.sentry.billingMetricsConsumer.sidecars }}
 {{ toYaml .Values.sentry.billingMetricsConsumer.sidecars | indent 6 }}
 {{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-billing-metrics-consumer
       {{- end }}
@@ -156,7 +173,11 @@ spec:
 {{- if .Values.sentry.billingMetricsConsumer.volumes }}
 {{ toYaml .Values.sentry.billingMetricsConsumer.volumes | indent 6 }}
 {{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 6 }}
+{{- end }}
       {{- if .Values.sentry.billingMetricsConsumer.priorityClassName }}
       priorityClassName: "{{ .Values.sentry.billingMetricsConsumer.priorityClassName }}"
       {{- end }}
+{{- end }}
 {{- end }}

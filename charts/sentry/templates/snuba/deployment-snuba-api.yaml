@@ -41,10 +41,16 @@ spec:
       {{- if .Values.snuba.api.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.snuba.api.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.snuba.api.tolerations }}
       tolerations:
 {{ toYaml .Values.snuba.api.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.snuba.api.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -118,6 +124,9 @@ spec:
 {{- if .Values.snuba.api.sidecars }}
 {{ toYaml .Values.snuba.api.sidecars | indent 6 }}
 {{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-snuba
       {{- end }}
@@ -127,5 +136,8 @@ spec:
             name: {{ template "sentry.fullname" . }}-snuba
 {{- if .Values.snuba.api.volumes }}
 {{ toYaml .Values.snuba.api.volumes | indent 8 }}
+{{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 8 }}
 {{- end }}
 {{- end }}

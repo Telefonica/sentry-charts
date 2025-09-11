@@ -51,10 +51,16 @@ spec:
       {{- if .Values.sentry.ingestConsumerEvents.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.sentry.ingestConsumerEvents.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.ingestConsumerEvents.tolerations }}
       tolerations:
 {{ toYaml .Values.sentry.ingestConsumerEvents.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.sentry.ingestConsumerEvents.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -86,6 +92,10 @@ spec:
           - "ingest-events"
           - "--consumer-group"
           - "ingest-consumer"
+          {{- if .Values.sentry.ingestConsumerEvents.autoOffsetReset }}
+          - "--auto-offset-reset"
+          - "{{ .Values.sentry.ingestConsumerEvents.autoOffsetReset }}"
+          {{- end }}
           {{- if .Values.sentry.ingestConsumerEvents.noStrictOffsetReset }}
           - "--no-strict-offset-reset"
           {{- end }}
@@ -93,13 +103,14 @@ spec:
           - "--healthcheck-file-path"
           - "/tmp/health.txt"
           {{- end }}
-          {{- if .Values.sentry.ingestConsumerEvents.maxBatchSize }}
-          - "--max-batch-size"
-          - "{{ .Values.sentry.ingestConsumerEvents.maxBatchSize }}"
-          {{- end }}
           {{- if .Values.sentry.ingestConsumerEvents.logLevel }}
           - "--log-level"
           - "{{ .Values.sentry.ingestConsumerEvents.logLevel }}"
+          {{- end }}
+          - "--"
+          {{- if .Values.sentry.ingestConsumerEvents.maxBatchSize }}
+          - "--max-batch-size"
+          - "{{ .Values.sentry.ingestConsumerEvents.maxBatchSize }}"
           {{- end }}
           {{- if .Values.sentry.ingestConsumerEvents.inputBlockSize }}
           - "--input-block-size"
@@ -109,7 +120,6 @@ spec:
           - "--max-batch-time-ms"
           - "{{ .Values.sentry.ingestConsumerEvents.maxBatchTimeMs }}"
           {{- end }}
-          - "--"
           {{- if .Values.sentry.ingestConsumerEvents.concurrency }}
           - "--processes"
           - "{{ .Values.sentry.ingestConsumerEvents.concurrency }}"
@@ -152,6 +162,9 @@ spec:
 {{- if .Values.sentry.ingestConsumerEvents.sidecars }}
 {{ toYaml .Values.sentry.ingestConsumerEvents.sidecars | indent 6 }}
 {{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-ingest-consumer-events
       {{- end }}
@@ -178,6 +191,9 @@ spec:
       {{ end }}
 {{- if .Values.sentry.ingestConsumerEvents.volumes }}
 {{ toYaml .Values.sentry.ingestConsumerEvents.volumes | indent 6 }}
+{{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 6 }}
 {{- end }}
       {{- if .Values.sentry.ingestConsumerEvents.priorityClassName }}
       priorityClassName: "{{ .Values.sentry.ingestConsumerEvents.priorityClassName }}"

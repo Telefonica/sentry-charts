@@ -1,4 +1,10 @@
 {{- if .Values.relay.enabled }}
+{{- $redisHost := include "sentry.redis.host" . -}}
+{{- $redisPort := include "sentry.redis.port" . -}}
+{{- $redisDb     := include "sentry.redis.db" . -}}
+{{- $redisPass := include "sentry.redis.password" . -}}
+{{- $redisProto  := ternary "rediss" "redis" (eq (include "sentry.redis.ssl" .) "true")  -}}
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -50,10 +56,16 @@ spec:
       {{- if .Values.relay.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.relay.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.relay.tolerations }}
       tolerations:
 {{ toYaml .Values.relay.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.relay.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -86,6 +98,15 @@ spec:
           env:
             - name: RELAY_PORT
               value: '{{ template "relay.port" }}'
+          {{- if and (not $redisPass) (.Values.externalRedis.existingSecret) }}
+            - name: HELM_CHARTS_RELAY_REDIS_PASSWORD_CONTROLLED
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.externalRedis.existingSecret }}
+                  key: {{ default "redis-password" .Values.externalRedis.existingSecretKey }}
+            - name: RELAY_REDIS_URL
+              value: {{ $redisProto }}://:$(HELM_CHARTS_RELAY_REDIS_PASSWORD_CONTROLLED)@{{ $redisHost }}:{{ $redisPort }}/{{ $redisDb }}
+          {{- end }}
 {{- if .Values.relay.init.env }}
 {{ toYaml .Values.relay.init.env | indent 12 }}
 {{- end }}
@@ -119,6 +140,15 @@ spec:
         env:
         - name: RELAY_PORT
           value: '{{ template "relay.port" }}'
+        {{- if and (not $redisPass) (.Values.externalRedis.existingSecret) }}
+        - name: HELM_CHARTS_RELAY_REDIS_PASSWORD_CONTROLLED
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.externalRedis.existingSecret }}
+              key: {{ default "redis-password" .Values.externalRedis.existingSecretKey }}
+        - name: RELAY_REDIS_URL
+          value: {{ $redisProto }}://:$(HELM_CHARTS_RELAY_REDIS_PASSWORD_CONTROLLED)@{{ $redisHost }}:{{ $redisPort }}/{{ $redisDb }}
+        {{- end }}
 {{- if .Values.relay.env }}
 {{ toYaml .Values.relay.env | indent 8 }}
 {{- end }}
@@ -129,7 +159,7 @@ spec:
             mountPath: /work/.relay/config.yml
             subPath: config.yml
             readOnly: true
-          {{- if .Values.geodata.volumeName }}
+          {{- if and .Values.geodata.volumeName .Values.geodata.accountID }}
           - name: {{ .Values.geodata.volumeName }}
             mountPath: {{ .Values.geodata.mountPath }}
           {{- end }}
@@ -165,6 +195,9 @@ spec:
 {{- if .Values.relay.sidecars }}
 {{ toYaml .Values.relay.sidecars | indent 6 }}
 {{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-relay
       {{- end }}
@@ -175,8 +208,16 @@ spec:
           defaultMode: 0644
       - name: credentials
         emptyDir: {}
+      {{- if and .Values.geodata.volumeName .Values.geodata.accountID }}
+      - name: {{ .Values.geodata.volumeName }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.geodata.volumeName }}
+      {{- end }}
 {{- if .Values.relay.volumes }}
 {{ toYaml .Values.relay.volumes | indent 6 }}
+{{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 6 }}
 {{- end }}
       {{- if .Values.relay.priorityClassName }}
       priorityClassName: "{{ .Values.relay.priorityClassName }}"

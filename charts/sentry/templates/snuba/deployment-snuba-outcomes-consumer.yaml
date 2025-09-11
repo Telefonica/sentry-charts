@@ -48,10 +48,16 @@ spec:
       {{- if .Values.snuba.outcomesConsumer.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.snuba.outcomesConsumer.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.snuba.outcomesConsumer.tolerations }}
       tolerations:
 {{ toYaml .Values.snuba.outcomesConsumer.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.snuba.outcomesConsumer.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -83,8 +89,10 @@ spec:
           - "outcomes_raw"
           - "--consumer-group"
           - "snuba-consumers"
+          {{- if .Values.snuba.outcomesConsumer.autoOffsetReset }}
           - "--auto-offset-reset"
           - "{{ .Values.snuba.outcomesConsumer.autoOffsetReset }}"
+          {{- end }}
           - "--max-batch-size"
           - "{{ default "3" .Values.snuba.outcomesConsumer.maxBatchSize }}"
           {{- if .Values.snuba.outcomesConsumer.processes }}
@@ -149,6 +157,12 @@ spec:
         securityContext:
 {{ toYaml .Values.snuba.outcomesConsumer.containerSecurityContext | indent 12 }}
 {{- end }}
+{{- if .Values.snuba.outcomesConsumer.sidecars }}
+{{ toYaml .Values.snuba.outcomesConsumer.sidecars | indent 6 }}
+{{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-snuba
       {{- end }}
@@ -158,5 +172,8 @@ spec:
             name: {{ template "sentry.fullname" . }}-snuba
 {{- if .Values.snuba.outcomesConsumer.volumes }}
 {{ toYaml .Values.snuba.outcomesConsumer.volumes | indent 8 }}
+{{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 8 }}
 {{- end }}
 {{- end }}

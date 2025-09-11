@@ -42,10 +42,16 @@ spec:
       {{- if .Values.symbolicator.api.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.symbolicator.api.nodeSelector | indent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.global.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.symbolicator.api.tolerations }}
       tolerations:
 {{ toYaml .Values.symbolicator.api.tolerations | indent 8 }}
+      {{- else if .Values.global.tolerations }}
+      tolerations:
+{{ toYaml .Values.global.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.symbolicator.api.topologySpreadConstraints }}
       topologySpreadConstraints:
@@ -120,6 +126,30 @@ spec:
         securityContext:
 {{ toYaml .Values.symbolicator.api.containerSecurityContext | indent 12 }}
 {{- end }}
+      {{- if .Values.symbolicator.api.cleaner.enabled }}
+      - name: {{ .Chart.Name }}-symbolicator-cleaner
+        image: "{{ template "symbolicator.image" . }}"
+        imagePullPolicy: {{ default "IfNotPresent" .Values.images.symbolicator.pullPolicy }}
+        command:
+          - /bin/sh
+          - -c
+        args:
+          - |
+            while true; do
+              symbolicator cleanup -c /etc/symbolicator/config.yml;
+              sleep {{ .Values.symbolicator.api.cleaner.sleepInterval }};
+            done
+        volumeMounts:
+        - mountPath: /etc/symbolicator
+          name: config
+          readOnly: true
+        - mountPath: /data
+          name: symbolicator-data
+        {{- if and (eq .Values.filestore.backend "gcs") .Values.filestore.gcs.secretName }}
+        - name: sentry-google-cloud-key
+          mountPath: /var/run/secrets/google
+        {{ end }}
+      {{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-symbolicator-api
       {{- end }}
@@ -150,7 +180,7 @@ spec:
         name: symbolicator-data
       spec:
         accessModes: {{ .Values.symbolicator.api.persistence.accessModes }}
-        {{- if hasKey .Values.symbolicator.api.persistence "storageClass" }}
+        {{- if hasKey .Values.symbolicator.api.persistence "storageClassName" }}
         storageClassName: {{ .Values.symbolicator.api.persistence.storageClassName | quote }}
         {{- end }}
         resources:

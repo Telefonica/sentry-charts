@@ -286,12 +286,36 @@ Set redis port
 Set redis password
 */}}
 {{- define "sentry.redis.password" -}}
-{{- if .Values.redis.enabled -}}
-{{ .Values.redis.password }}
-{{- else -}}
+{{- if and (.Values.redis.enabled) (.Values.redis.auth.enabled) -}}
+{{ .Values.redis.auth.password }}
+{{- else if .Values.externalRedis.password -}}
 {{ .Values.externalRedis.password }}
+{{- else }}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Set redis db
+*/}}
+{{- define "sentry.redis.db" -}}
+{{- if .Values.redis.enabled -}}
+{{ default 0 .Values.redis.db }}
+{{- else -}}
+{{ default 0 .Values.externalRedis.db }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Set redis ssl
+*/}}
+{{- define "sentry.redis.ssl" -}}
+{{- if .Values.redis.enabled -}}
+{{ default false .Values.redis.ssl }}
+{{- else -}}
+{{ default false .Values.externalRedis.ssl }}
+{{- end -}}
+{{- end -}}
+
 
 {{/*
 Create the name of the service account to use
@@ -389,12 +413,50 @@ Set ClickHouse cluster name
 {{- end -}}
 
 {{/*
+Set ClickHouse distributed cluster name
+*/}}
+{{- define "sentry.clickhouse.distributed.cluster.name" -}}
+{{- if .Values.clickhouse.enabled -}}
+{{ .Release.Name | printf "%s-clickhouse" }}
+{{- else -}}
+{{ default .Values.externalClickhouse.clusterName .Values.externalClickhouse.distributedClusterName }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Set ClickHouse secure setting
+*/}}
+{{- define "sentry.clickhouse.secure" -}}
+{{- if and (.Values.externalClickhouse.enabled) (.Values.externalClickhouse.secure) -}}
+True
+{{- end -}}
+{{- end -}}
+
+{{/*
+Set ClickHouse ca_certs setting
+*/}}
+{{- define "sentry.clickhouse.ca_certs" -}}
+{{- if and (.Values.externalClickhouse.enabled) (.Values.externalClickhouse.ca_certs) -}}
+{{ .Values.externalClickhouse.ca_certs }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Set ClickHouse verify ca setting
+*/}}
+{{- define "sentry.clickhouse.verify" -}}
+{{- if and (.Values.externalClickhouse.enabled) (.Values.externalClickhouse.verify) -}}
+True
+{{- end -}}
+{{- end -}}
+
+{{/*
 Set Kafka Confluent host
 */}}
 {{- define "sentry.kafka.host" -}}
 {{- if .Values.kafka.enabled -}}
 {{- template "sentry.kafka.fullname" . -}}
-{{- else if and (.Values.externalKafka) (not (kindIs "slice" .Values.externalKafka)) -}}
+{{- else if and (.Values.externalKafka) (not (.Values.externalKafka.cluster)) -}}
 {{ required "A valid .Values.externalKafka.host is required" .Values.externalKafka.host }}
 {{- end -}}
 {{- end -}}
@@ -405,7 +467,7 @@ Set Kafka Confluent port
 {{- define "sentry.kafka.port" -}}
 {{- if and (.Values.kafka.enabled) (.Values.kafka.service.ports.client) -}}
 {{- .Values.kafka.service.ports.client }}
-{{- else if and (.Values.externalKafka) (not (kindIs "slice" .Values.externalKafka)) -}}
+{{- else if and (.Values.externalKafka) (not (.Values.externalKafka.cluster)) -}}
 {{ required "A valid .Values.externalKafka.port is required" .Values.externalKafka.port }}
 {{- end -}}
 {{- end -}}
@@ -416,7 +478,7 @@ Set Kafka Confluent Controller port
 {{- define "sentry.kafka.controller_port" -}}
 {{- if and (.Values.kafka.enabled) (.Values.kafka.service.ports.controller ) -}}
 {{- .Values.kafka.service.ports.controller }}
-{{- else if and (.Values.externalKafka) (not (kindIs "slice" .Values.externalKafka)) -}}
+{{- else if and (.Values.externalKafka) (not (.Values.externalKafka.cluster)) -}}
 {{ required "A valid .Values.externalKafka.port is required" .Values.externalKafka.port }}
 {{- end -}}
 {{- end -}}
@@ -425,15 +487,113 @@ Set Kafka Confluent Controller port
 Set Kafka bootstrap servers string
 */}}
 {{- define "sentry.kafka.bootstrap_servers_string" -}}
-{{- if or (.Values.kafka.enabled) (not (kindIs "slice" .Values.externalKafka)) -}}
+{{- if or (.Values.kafka.enabled) (not (.Values.externalKafka.cluster)) -}}
 {{ printf "%s:%s" (include "sentry.kafka.host" .) (include "sentry.kafka.port" .) }}
 {{- else -}}
-{{- range $index, $elem := .Values.externalKafka -}}
+{{- range $index, $elem := .Values.externalKafka.cluster -}}
 {{- if $index -}},{{- end -}}{{ printf "%s:%s" $elem.host (toString $elem.port) }}
 {{- end -}}
 {{- end -}}
 {{- end -}}
 
+{{/*
+SASL auth setings for Kafka:
+* https://github.com/getsentry/snuba/blob/24.11.2/snuba/settings/__init__.py#L220-L230
+* https://github.com/getsentry/sentry/blob/24.11.2/src/sentry/utils/kafka_config.py#L9-L34
+* https://github.com/getsentry/sentry/blob/24.11.2/src/sentry/conf/server.py#L2844-L2853
+*/}}
+
+{{/*
+Set Kafka security protocol
+*/}}
+{{- define "sentry.kafka.security_protocol" -}}
+{{- if .Values.kafka.enabled -}}
+{{ default "plaintext" .Values.kafka.listeners.client.protocol }}
+{{- else -}}
+{{ default "plaintext" .Values.externalKafka.security.protocol }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Set Kafka sasl mechanism
+*/}}
+{{- define "sentry.kafka.sasl_mechanism" -}}
+{{- $CheckProtocol := include "sentry.kafka.security_protocol" . -}}
+{{- if (regexMatch "^SASL_" $CheckProtocol) -}}
+{{- if .Values.kafka.enabled -}}
+{{ default "None" (split "," .Values.kafka.sasl.enabledMechanisms)._0 }}
+{{- else -}}
+{{ default "None" .Values.externalKafka.sasl.mechanism }}
+{{- end -}}
+{{- else -}}
+{{ "None" }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Set Kafka sasl username
+*/}}
+{{- define "sentry.kafka.sasl_username" -}}
+{{- $CheckProtocol := include "sentry.kafka.security_protocol" . -}}
+{{- if (regexMatch "^SASL_" $CheckProtocol) -}}
+{{- if .Values.kafka.enabled -}}
+{{ default "None" (first (default tuple .Values.kafka.sasl.client.users)) }}
+{{- else -}}
+{{ default "None" .Values.externalKafka.sasl.username }}
+{{- end -}}
+{{- else -}}
+{{ "None" }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Set Kafka sasl password
+*/}}
+{{- define "sentry.kafka.sasl_password" -}}
+{{- $CheckProtocol := include "sentry.kafka.security_protocol" . -}}
+{{- if (regexMatch "^SASL_" $CheckProtocol) -}}
+{{- if .Values.kafka.enabled -}}
+{{ default "None" (first (default tuple .Values.kafka.sasl.client.passwords)) }}
+{{- else -}}
+{{ default "None" .Values.externalKafka.sasl.password }}
+{{- end -}}
+{{- else -}}
+{{ "None" }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Set Senty compression.type for Kafka
+*/}}
+{{- define "sentry.kafka.compression_type" -}}
+{{- if .Values.kafka.enabled -}}
+{{ default "" .Values.sentry.kafka.compression.type }}
+{{- else -}}
+{{ default "" .Values.externalKafka.compression.type }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Set Senty message.max.bytes for Kafka
+*/}}
+{{- define "sentry.kafka.message_max_bytes" -}}
+{{- if .Values.kafka.enabled -}}
+{{ default 50000000 .Values.sentry.kafka.message.max.bytes | int64 }}
+{{- else -}}
+{{ default 50000000 .Values.externalKafka.message.max.bytes | int64 }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Set Senty socket.timeout for Kafka
+*/}}
+{{- define "sentry.kafka.socket_timeout_ms" -}}
+{{- if .Values.kafka.enabled -}}
+{{ default 1000 .Values.sentry.kafka.socket.timeout.ms | int64 }}
+{{- else -}}
+{{ default 1000 .Values.externalKafka.socket.timeout.ms | int64 }}
+{{- end -}}
+{{- end -}}
 
 {{/*
 Set RabbitMQ host
@@ -454,6 +614,52 @@ Common Snuba environment variables
   value: /etc/snuba/settings.py
 - name: DEFAULT_BROKERS
   value: {{ include "sentry.kafka.bootstrap_servers_string" . | quote }}
+{{- $sentryKafkaSaslMechanism := include "sentry.kafka.sasl_mechanism" . -}}
+{{- if not (eq "None" $sentryKafkaSaslMechanism) }}
+- name: KAFKA_SASL_MECHANISM
+  value: {{ $sentryKafkaSaslMechanism | quote}}
+{{- end }}
+{{- $sentryKafkaSaslUsername := include "sentry.kafka.sasl_username" . -}}
+{{- if not (eq "None" $sentryKafkaSaslUsername) }}
+- name: KAFKA_SASL_USERNAME
+  value: {{ $sentryKafkaSaslUsername | quote }}
+{{- end }}
+{{- $sentryKafkaSaslPassword := include "sentry.kafka.sasl_password" . -}}
+{{- if not (eq "None" $sentryKafkaSaslPassword) }}
+- name: KAFKA_SASL_PASSWORD
+  value: {{ $sentryKafkaSaslPassword | quote }}
+{{- end }}
+- name: KAFKA_SECURITY_PROTOCOL
+  value: {{ include "sentry.kafka.security_protocol" . | quote }}
+
+{{/*
+Set external Redis password from existingSecret
+*/}}
+{{- if and (.Values.redis.enabled) (.Values.redis.auth.enabled) }}
+{{- if .Values.redis.auth.password }}
+- name: REDIS_PASSWORD
+  value: {{ .Values.redis.auth.password | quote }}
+{{- else if .Values.redis.auth.existingSecret }}
+- name: REDIS_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ default (include "sentry.redis.fullname" .) .Values.redis.auth.existingSecret }}
+      key: {{ default "redis-password" .Values.redis.auth.existingSecretPasswordKey }}
+{{- end }}
+{{- else if .Values.externalRedis.password }}
+- name: REDIS_PASSWORD
+  value: {{ .Values.externalRedis.password | quote }}
+{{- else if .Values.externalRedis.existingSecret }}
+- name: REDIS_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.externalRedis.existingSecret }}
+      key: {{ default "redis-password" .Values.externalRedis.existingSecretKey }}
+{{- end }}
+
+{{/*
+Set external Clickhouse password from existingSecret
+*/}}
 {{- if .Values.externalClickhouse.existingSecret }}
 - name: CLICKHOUSE_PASSWORD
   valueFrom:
@@ -476,7 +682,7 @@ Common Snuba environment variables
 - name: SENTRY_KAFKA_BROKERS_OCCURRENCES
   value: {{ include "sentry.kafka.bootstrap_servers_string" . | quote }}
 - name: SENTRY_BUCKET_PROFILES
-  value: file://localhost//var/lib/sentry-profiles
+  value: "file:///var/vroom/sentry-profiles"
 - name: SENTRY_SNUBA_HOST
   value: http://{{ template "sentry.fullname" . }}-snuba:{{ template "snuba.port" . }}
 {{- end -}}
@@ -485,6 +691,10 @@ Common Snuba environment variables
 Common Sentry environment variables
 */}}
 {{- define "sentry.env" -}}
+{{- $redisHost := include "sentry.redis.host" . -}}
+{{- $redisPort := include "sentry.redis.port" . -}}
+{{- $redisDb     := include "sentry.redis.db" . -}}
+{{- $redisProto  := ternary "rediss" "redis" (eq (include "sentry.redis.ssl" .) "true")  -}}
 - name: SNUBA
   value: http://{{ template "sentry.fullname" . }}-snuba:{{ template "snuba.port" . }}
 - name: VROOM
@@ -502,6 +712,10 @@ Common Sentry environment variables
       name: {{ template "sentry.fullname" . }}-sentry-secret
       key: "key"
 {{- end }}
+
+{{/*
+Set external Postgresql password from existingSecret
+*/}}
 {{- if .Values.postgresql.enabled }}
 - name: POSTGRES_PASSWORD
   valueFrom:
@@ -518,6 +732,10 @@ Common Sentry environment variables
       name: {{ .Values.externalPostgresql.existingSecret }}
       key: {{ or .Values.externalPostgresql.existingSecretKeys.password .Values.externalPostgresql.existingSecretKey "postgresql-password" }}
 {{- end }}
+
+{{/*
+Set external Postgresql user from existingSecret
+*/}}
 {{- if and .Values.externalPostgresql.existingSecret .Values.externalPostgresql.existingSecretKeys.username }}
 - name: POSTGRES_USER
   valueFrom:
@@ -528,6 +746,10 @@ Common Sentry environment variables
 - name: POSTGRES_USER
   value: {{ include "sentry.postgresql.username" . | quote }}
 {{- end }}
+
+{{/*
+Set external Postgresql name from existingSecret
+*/}}
 {{- if and .Values.externalPostgresql.existingSecret .Values.externalPostgresql.existingSecretKeys.database }}
 - name: POSTGRES_NAME
   valueFrom:
@@ -538,6 +760,14 @@ Common Sentry environment variables
 - name: POSTGRES_NAME
   value: {{ include "sentry.postgresql.database" . | quote }}
 {{- end }}
+
+{{/*
+Set external Postgresql host from existingSecret
+*/}}
+{{- if .Values.pgbouncer.enabled }}
+- name: POSTGRES_HOST
+  value: {{ template "sentry.fullname" . }}-pgbouncer
+{{- else }}
 {{- if and .Values.externalPostgresql.existingSecret .Values.externalPostgresql.existingSecretKeys.host }}
 - name: POSTGRES_HOST
   valueFrom:
@@ -548,6 +778,15 @@ Common Sentry environment variables
 - name: POSTGRES_HOST
   value: {{ include "sentry.postgresql.host" . | quote }}
 {{- end }}
+{{- end }}
+
+{{/*
+Set external Postgresql port from existingSecret
+*/}}
+{{- if .Values.pgbouncer.enabled }}
+- name: POSTGRES_PORT
+  value: "5432"
+{{- else }}
 {{- if and .Values.externalPostgresql.existingSecret .Values.externalPostgresql.existingSecretKeys.port }}
 - name: POSTGRES_PORT
   valueFrom:
@@ -558,6 +797,11 @@ Common Sentry environment variables
 - name: POSTGRES_PORT
   value: {{ include "sentry.postgresql.port" . | quote }}
 {{- end }}
+{{- end }}
+
+{{/*
+Set S3
+*/}}
 {{- if and (eq .Values.filestore.backend "s3") .Values.filestore.s3.existingSecret }}
 - name: S3_ACCESS_KEY_ID
   valueFrom:
@@ -570,10 +814,62 @@ Common Sentry environment variables
       name: {{ .Values.filestore.s3.existingSecret }}
       key: {{ default "s3-secret-access-key" .Values.filestore.s3.secretAccessKeyRef }}
 {{- end }}
+
+{{/*
+Set redis password
+*/}}
+{{- if .Values.redis.enabled }}
+{{- if .Values.redis.password }}
+- name: REDIS_PASSWORD
+  value: {{ .Values.redis.password | quote }}
+{{- else if .Values.redis.existingSecret }}
+- name: REDIS_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ default (include "sentry.redis.fullname" .) .Values.redis.existingSecret }}
+      key: {{ default "redis-password" .Values.redis.existingSecretKey }}
+{{- end }}
+{{- else if .Values.externalRedis.password }}
+- name: REDIS_PASSWORD
+  value: {{ .Values.externalRedis.password | quote }}
+{{- else if .Values.externalRedis.existingSecret }}
+- name: REDIS_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.externalRedis.existingSecret }}
+      key: {{ default "redis-password" .Values.externalRedis.existingSecretKey }}
+{{- end }}
+
+
+{{- if and (.Values.redis.enabled) (.Values.redis.auth.existingSecret) }}
+- name: HELM_CHARTS_SENTRY_REDIS_PASSWORD_CONTROLLED
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.redis.auth.existingSecret }}
+      key: {{ default "redis-password" .Values.redis.auth.existingSecretPasswordKey }}
+- name: BROKER_URL
+  value: "{{ $redisProto }}://:$(HELM_CHARTS_SENTRY_REDIS_PASSWORD_CONTROLLED)@{{ $redisHost }}:{{ $redisPort }}/{{ $redisDb }}"
+{{- else if (.Values.externalRedis.existingSecret) }}
+- name: HELM_CHARTS_SENTRY_REDIS_PASSWORD_CONTROLLED
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.externalRedis.existingSecret }}
+      key: {{ default "redis-password" .Values.externalRedis.existingSecretKey }}
+- name: BROKER_URL
+  value: "{{ $redisProto }}://:$(HELM_CHARTS_SENTRY_REDIS_PASSWORD_CONTROLLED)@{{ $redisHost }}:{{ $redisPort }}/{{ $redisDb }}"
+{{- end }}
+
+{{/*
+Set google application
+*/}}
 {{- if and (eq .Values.filestore.backend "gcs") .Values.filestore.gcs.secretName }}
 - name: GOOGLE_APPLICATION_CREDENTIALS
   value: /var/run/secrets/google/{{ .Values.filestore.gcs.credentialsFile }}
 {{- end }}
+
+{{/*
+Set sentry email password
+*/}}
 {{- if .Values.mail.password }}
 - name: SENTRY_EMAIL_PASSWORD
   value: {{ .Values.mail.password | quote }}
@@ -585,6 +881,10 @@ Common Sentry environment variables
       key: {{ default "mail-password" .Values.mail.existingSecretKey }}
 {{- end }}
 {{ include "novum.sentry.env" . }}
+
+{{/*
+Set slack
+*/}}
 {{- if .Values.slack.existingSecret }}
 - name: SLACK_CLIENT_ID
   valueFrom:
@@ -602,6 +902,10 @@ Common Sentry environment variables
       name: {{ .Values.slack.existingSecret }}
       key: {{ default "signing-secret" .Values.slack.existingSecretSigningSecret }}
 {{- end }}
+
+{{/*
+Set discord
+*/}}
 {{- if .Values.discord.existingSecret }}
 - name: DISCORD_APPLICATION_ID
   valueFrom:
@@ -624,6 +928,10 @@ Common Sentry environment variables
       name: {{ .Values.discord.existingSecret }}
       key: {{ default "bot-token" .Values.discord.existingSecretBotToken }}
 {{- end }}
+
+{{/*
+Set github app
+*/}}
 {{- if and .Values.github.existingSecret }}
 - name: GITHUB_APP_PRIVATE_KEY
   valueFrom:
@@ -646,6 +954,10 @@ Common Sentry environment variables
       name: {{ .Values.github.existingSecret }}
       key: {{ default "client-secret" .Values.github.existingSecretClientSecretKey }}
 {{- end }}
+
+{{/*
+Set google auth
+*/}}
 {{- if .Values.google.existingSecret }}
 - name: GOOGLE_AUTH_CLIENT_ID
   valueFrom:
@@ -658,6 +970,10 @@ Common Sentry environment variables
       name: {{ .Values.google.existingSecret }}
       key: {{ default "client-secret" .Values.google.existingSecretClientSecretKey }}
 {{- end }}
+
+{{/*
+Set openai api
+*/}}
 {{- if .Values.openai.existingSecret }}
 - name: OPENAI_API_KEY
   valueFrom:
@@ -673,4 +989,67 @@ Common Sentry environment variables
 {{- else -}}
 {{- print "autoscaling/v1" -}}
 {{- end -}}
+{{- end -}}
+
+
+{{/*
+Pgbouncer environment variables
+*/}}
+{{- define "sentry.pgbouncer.env" -}}
+{{- if and .Values.externalPostgresql.existingSecret .Values.externalPostgresql.existingSecretKeys.host }}
+- name: POSTGRESQL_HOST
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.externalPostgresql.existingSecret }}
+      key: {{ default .Values.externalPostgresql.existingSecretKeys.host }}
+{{- else }}
+- name: POSTGRESQL_HOST
+  value: {{ include "sentry.postgresql.host" . | quote }}
+{{- end }}
+{{- if and .Values.externalPostgresql.existingSecret .Values.externalPostgresql.existingSecretKeys.port }}
+- name: POSTGRESQL_PORT
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.externalPostgresql.existingSecret }}
+      key: {{ default .Values.externalPostgresql.existingSecretKeys.port }}
+{{- else }}
+- name: POSTGRESQL_PORT
+  value: {{ include "sentry.postgresql.port" . | quote }}
+{{- end }}
+{{- if and .Values.externalPostgresql.existingSecret .Values.externalPostgresql.existingSecretKeys.database }}
+- name: PGBOUNCER_DATABASE
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.externalPostgresql.existingSecret }}
+      key: {{ default .Values.externalPostgresql.existingSecretKeys.database }}
+{{- else }}
+- name: PGBOUNCER_DATABASE
+  value: {{ include "sentry.postgresql.database" . | quote }}
+{{- end }}
+{{- if .Values.postgresql.enabled }}
+- name: POSTGRESQL_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ default (include "sentry.postgresql.fullname" .) .Values.postgresql.auth.existingSecret }}
+      key: {{ default "postgres-password" .Values.postgresql.auth.secretKeys.adminPasswordKey }}
+{{- else if .Values.externalPostgresql.password }}
+- name: POSTGRESQL_PASSWORD
+  value: {{ .Values.externalPostgresql.password | quote }}
+{{- else if .Values.externalPostgresql.existingSecret }}
+- name: POSTGRESQL_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.externalPostgresql.existingSecret }}
+      key: {{ or .Values.externalPostgresql.existingSecretKeys.password .Values.externalPostgresql.existingSecretKey "postgresql-password" }}
+{{- end }}
+{{- if and .Values.externalPostgresql.existingSecret .Values.externalPostgresql.existingSecretKeys.username }}
+- name: POSTGRESQL_USERNAME
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.externalPostgresql.existingSecret }}
+      key: {{ default .Values.externalPostgresql.existingSecretKeys.username }}
+{{- else }}
+- name: POSTGRESQL_USERNAME
+  value: {{ include "sentry.postgresql.username" . | quote }}
+{{- end }}
 {{- end -}}

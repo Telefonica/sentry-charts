@@ -9,7 +9,7 @@ source ./bash_util.sh
 NAMESPACE=common
 
 function usage() {
-  echo "Usage: $(basename "$0") [-h][-u][-y][-d][-r]"
+  echo "Usage: $(basename "$0") [-h][-u][-y][-d][-r][-T TIMEOUT]"
   echo "Install sentry-dev in $NAMESPACE"
   echo ""
   echo "  -h         Show this help"
@@ -17,6 +17,7 @@ function usage() {
   echo "  -y         Don't ask for confirmation"
   echo "  -d         Enable debug output"
   echo "  -r         Do a dry-run, don't install or upgrade anything"
+  echo "  -T TIMEOUT Helm timeout duration (default: 10m)"
   echo "  -k PATH    tf_module_kubenovum repository path. If not present it will try to look for it in the parent dir"
   echo "  -t PATH    tef_iaac repository path. If not present it will try to look for it in the parent dir"
   echo ""
@@ -28,10 +29,11 @@ declare -a HELM_UPGRADE_OPTIONS
 ASK_CONFIRMATION=yes
 DEBUG_OPTION=
 DRY_RUN_OPTION=
+HELM_TIMEOUT=15m
 TF_MODULE_KUBENOVUM=
 TEF_IAAC=
 
-while getopts "huydrk:t:" OPT; do
+while getopts "huydrT:k:t:" OPT; do
   case "$OPT" in
     h)
       usage
@@ -49,6 +51,9 @@ while getopts "huydrk:t:" OPT; do
       ;;
     r)
       DRY_RUN_OPTION="--dry-run"
+      ;;
+    T)
+      HELM_TIMEOUT="$OPTARG"
       ;;
     k)
       TF_MODULE_KUBENOVUM="$OPTARG"
@@ -82,4 +87,4 @@ fi
 kubeswitch common/dev
 helm_dependency_check "charts/sentry"
 
-helm -n $NAMESPACE $HELM_ACTION sentry charts/sentry "${HELM_UPGRADE_OPTIONS[@]}" --timeout 10m $DRY_RUN_OPTION $DEBUG_OPTION -f "$TF_MODULE_KUBENOVUM/k8s-setup/chart-values/sentry.yaml" -f overrides/images.yaml -f overrides/sentry-dev.yaml -f "$TEF_IAAC/environments/azure/northeurope04/dev.global/blue-k8s-infra/chart-values-override/sentry.yaml" -f overrides/requests.yaml
+helm -n $NAMESPACE $HELM_ACTION sentry charts/sentry "${HELM_UPGRADE_OPTIONS[@]}" --timeout $HELM_TIMEOUT $DRY_RUN_OPTION $DEBUG_OPTION -f "$TF_MODULE_KUBENOVUM/k8s-setup/chart-values/sentry.yaml" -f overrides/images.yaml -f overrides/sentry-dev.yaml -f "$TEF_IAAC/environments/azure/northeurope04/dev.global/blue-k8s-infra/chart-values-override/sentry.yaml" -f overrides/requests.yaml
