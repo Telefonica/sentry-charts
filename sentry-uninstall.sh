@@ -5,20 +5,19 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd "$SCRIPT_DIR"
 
 NAMESPACE=common
-ENVIRONMENT="common/dev"  # Default environment
 
 function usage() {
-  echo "Usage: $(basename "$0") [-h] [-f] [ENVIRONMENT]"
+  echo "Usage: $(basename "$0") [-h] [-f] ENVIRONMENT"
   echo "Uninstall sentry from $NAMESPACE"
   echo ""
   echo "  -h  Show this help"
   echo "  -f  Full uninstall. Clean PersistentVolume, etc."
-  echo "  ENVIRONMENT  Target environment (default: common/dev)"
+  echo "  ENVIRONMENT  Target environment (required)"
   echo ""
   echo "Examples:"
-  echo "  $(basename "$0")                    # Uses common/dev (default)"
-  echo "  $(basename "$0") common/qa          # Uses common/qa"
-  echo "  $(basename "$0") -f common/prod     # Full uninstall in common/prod"
+  echo "  $(basename "$0") common/dev        # Uninstall from common/dev"
+  echo "  $(basename "$0") common/moves-pre  # Uninstall from common/moves-pre"
+  echo "  $(basename "$0") -f common/moves-prd  # Full uninstall (including pvcs cleanup) in common/moves-prd"
   echo ""
 }
 
@@ -42,11 +41,15 @@ while getopts "hf" OPT; do
 done
 shift $((OPTIND-1))
 
-# Set environment from parameter or use default
-if [ $# -gt 0 ]; then
-  ENVIRONMENT="$1"
+# Check if environment parameter is provided
+if [ $# -eq 0 ]; then
+  echo "ERROR: Environment parameter is required"
+  echo ""
+  usage
+  exit 1
 fi
 
+ENVIRONMENT="$1"
 echo "Target environment: $ENVIRONMENT"
 
 # Validate environment exists by trying to switch to it
